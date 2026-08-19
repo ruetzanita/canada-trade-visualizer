@@ -1,0 +1,30 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js build output
+/.next/
+/out/
+
+# Build & runtime artifacts
+*.tsbuildinfo
+/.wrangler/
+.DS_Store
+*.log
+
+# Local environment & secrets
+.env*.local
+.env
+
+# Heavy databases & raw ledger files (>100MB)
+*.db
+!db/production.db
+db/unified_master.db
+raw_data/*.csv
+raw_data/*.zip
+scratch/
+

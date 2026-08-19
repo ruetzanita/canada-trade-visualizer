@@ -1,0 +1,41 @@
+{
+  "name": "canada_trade",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "dev:pages": "wrangler pages dev --next",
+    "download-assets": "node scratch/download_globe_assets.mjs",
+    "build": "next build",
+    "build:prod": "node scratch/cleanup.mjs && node scripts/build_production_db.mjs && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ingest": "node scripts/ingest_raw_data.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@libsql/client": "^0.17.4",
+    "better-sqlite3": "^12.11.1",
+    "csv-parser": "^3.2.1",
+    "lucide-react": "^1.18.0",
+    "next": "15.5.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-globe.gl": "^2.38.0",
+    "recharts": "^3.8.1",
+    "three": "^0.184.0"
+  },
+  "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/three": "^0.184.1",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "15.5.2",
+    "typescript": "^6.0.3"
+  }
+}

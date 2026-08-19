@@ -1,0 +1,575 @@
+.container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Header Chart & HUD */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 60px;
+  background: rgba(11, 13, 23, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.headerTitle {
+  font-weight: 800;
+  font-size: 20px;
+  color: white;
+  width: 250px;
+}
+
+.headerYear {
+  width: 100px;
+  text-align: right;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.chartContainer {
+  flex: 1;
+  height: 100%;
+  padding-top: 10px;
+}
+
+/* Timeline Slider */
+.timeline {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  z-index: 100;
+  padding: 15px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.timelineRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.timelineInput {
+  width: 100%;
+  accent-color: var(--color-highlight);
+  cursor: pointer;
+  touch-action: none; /* Prevent browser swipe gestures while scrubbing */
+}
+
+/* HUD Side Panel */
+.sidePanel {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  width: 380px;
+  z-index: 100;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panelTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.macroValue {
+  font-size: 42px;
+  font-weight: 800;
+  color: white;
+  margin: 0;
+}
+
+.macroLabel {
+  font-size: 14px;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+/* Country Card */
+.countryCard {
+  position: absolute;
+  bottom: 140px; /* prevent bleeding into bottom bar */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 450px;
+  max-height: 60vh;
+  z-index: 100;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  background: rgba(11, 13, 23, 0.90);
+}
+
+.canadaCard {
+  width: 650px;
+  max-height: 60vh;
+}
+
+.countryCopyScrollable {
+  font-size: 15px;
+  line-height: 1.8;
+  text-align: left;
+  color: #E2E8F0;
+  margin-top: 8px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.countryCopyScrollable::-webkit-scrollbar {
+  width: 6px;
+}
+.countryCopyScrollable::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+.countryCopyScrollable::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.canadaParagraph {
+  margin-bottom: 16px;
+  letter-spacing: 0.3px;
+}
+
+.canadaParagraph:last-child {
+  margin-bottom: 0;
+}
+
+.countryTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+  padding-bottom: 12px;
+  margin-bottom: 0px;
+}
+
+.metricRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.metricValue {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--font-sans);
+}
+
+.growthPositive {
+  color: var(--color-green);
+}
+
+.growthNegative {
+  color: var(--color-highlight);
+}
+
+.countryCopy {
+  font-size: 15px;
+  line-height: 1.8;
+  text-align: left;
+  color: #E2E8F0;
+  margin-top: 8px;
+}
+
+.tradeFocus {
+  margin-top: 16px;
+  background: rgba(255,255,255,0.03);
+  padding: 16px 20px;
+  border-radius: 8px;
+  border-left: 3px solid #F03A47;
+}
+
+.tradeFocus h4 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #F03A47;
+  margin-bottom: 8px;
+  margin-top: 0;
+}
+
+.tradeFocus p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #E2E8F0;
+  margin: 0;
+}
+
+.topImports {
+  margin-top: 16px;
+  background: rgba(255,255,255,0.03);
+  padding: 16px 20px;
+  border-radius: 8px;
+}
+
+.topImports h4 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94A3B8;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 8px;
+}
+
+.topImports ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 15px;
+  color: #F8FAFC;
+  line-height: 1.7;
+}
+
+.topImports li {
+  margin-bottom: 8px;
+}
+
+.topImports li:last-child {
+  margin-bottom: 0;
+}
+
+/* Bottom Title Bar */
+.bottomBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 100;
+  padding: 20px 180px 20px 100px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(11, 13, 23, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.bottomBarText {
+  text-align: left;
+}
+
+.mainTitle {
+  font-size: 22px;
+  color: white;
+  margin-bottom: 12px;
+}
+
+.explainerText {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.sankeyContainer {
+  position: absolute;
+  top: 80px;
+  bottom: 120px;
+  right: 20px;
+  width: 400px;
+  z-index: 100;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.75);
+  transform-origin: top right;
+}
+
+.bottomControls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Region Toggle */
+.regionToggle {
+  display: flex;
+  gap: 10px;
+}
+
+.mobileViewToggleInline {
+  display: none; /* hidden on desktop */
+}
+
+.toggleBtn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.toggleBtn.active {
+  background: var(--color-highlight);
+  border-color: var(--color-highlight);
+}
+
+.toggleBtn:hover:not(.active) {
+  background: rgba(255,255,255,0.1);
+}
+
+.cardHeaderButtons {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.closeBtn, .collapseBtn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.closeBtn:hover, .collapseBtn:hover {
+  opacity: 1;
+}
+
+.cardBody {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 0;
+  flex: 1;
+}
+
+.cardBodyHidden {
+  grid-template-rows: 0fr;
+}
+
+.cardBodyInner {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 8px;
+  padding-right: 5px; /* prevent scrollbar from hiding content */
+}
+
+.cardBodyInner::-webkit-scrollbar {
+  width: 6px;
+}
+.cardBodyInner::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+.cardBodyInner::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+/* Source Link */
+.sourceLinkContainer {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sourceLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94A3B8;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.sourceLink:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #F8FAFC;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  .headerTitle, .headerYear {
+    display: none !important;
+  }
+
+  .header {
+    height: 80px;
+    flex-direction: row;
+    padding: 0 10px;
+    align-items: center;
+  }
+  
+  .chartContainer {
+    width: 100%;
+    height: 100%;
+    padding-top: 5px;
+    flex: 1;
+  }
+
+  .timeline {
+    width: 80%; /* Shrink to prevent edge-swipe back navigation */
+    top: 90px;
+    padding: 10px 15px;
+  }
+
+  .bottomControls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mobileViewToggleInline {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sidePanel {
+    width: 95%;
+    top: 190px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 16px;
+  }
+
+  .bottomBar {
+    padding: 15px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .explainerText {
+    display: none;
+  }
+  
+  .bottomBarText {
+    text-align: center;
+    width: 100%;
+  }
+  
+  .regionToggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .countryCard, .canadaCard {
+    width: 100%;
+    bottom: 0px; /* Make it a true bottom sheet on mobile */
+    padding: 20px;
+    padding-bottom: 30px; /* safe area */
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    max-height: 75vh;
+    z-index: 200; /* above bottom bar */
+  }
+
+  .countryTitle {
+    font-size: 22px;
+  }
+
+  .metricValue {
+    font-size: 20px;
+  }
+
+  .hideOnMobile {
+    display: none !important;
+  }
+
+  .sankeyMobileVisible {
+    display: flex !important;
+    position: absolute;
+    top: 180px;
+    bottom: 0px; /* stretch down completely */
+    left: 0;
+    width: 100vw;
+    right: auto;
+    z-index: 90;
+    transform: scale(0.75);
+    transform-origin: top center;
+  }
+}
+
+/* Hide mobile toggle on desktop & adjust mid-res layout */
+@media (min-width: 769px) {
+  .mobileViewToggle {
+    display: none;
+  }
+  .sankeyMobileVisible {
+    display: flex; /* normal desktop behavior is flex for container */
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1440px) {
+  .sidePanel {
+    width: 300px;
+    padding: 16px;
+  }
+  
+  .timeline {
+    width: 480px;
+    padding: 10px 20px;
+  }
+
+  .sankeyContainer {
+    width: 340px;
+    transform: scale(0.65);
+    transform-origin: top right;
+  }
+
+  .countryCard {
+    width: 380px;
+    padding: 24px;
+  }
+
+  .canadaCard {
+    width: 480px;
+    padding: 24px;
+  }
+}

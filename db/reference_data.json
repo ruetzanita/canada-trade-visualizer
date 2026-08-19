@@ -1,0 +1,438 @@
+{
+    "ports": [
+        {
+            "name": "Port of Vancouver",
+            "facilities": [
+                "Centerm",
+                "Vanterm",
+                "Deltaport",
+                "Fraser Surrey Docks"
+            ],
+            "capacity_limits_teu": 3500000,
+            "throughput_details": "Handles approx 150 million metric tonnes annually. Serving the EUD and IPD routes."
+        },
+        {
+            "name": "Prince Rupert Port Authority",
+            "facilities": [
+                "Fairview Container Terminal",
+                "Ridley Island Bulk Terminal"
+            ],
+            "capacity_limits_teu": 1350000,
+            "throughput_details": "Handles approx 25 million tonnes annually. Key for IPD routes."
+        },
+        {
+            "name": "Port of Montreal",
+            "facilities": [
+                "Cast",
+                "Racine",
+                "Maisonneuve",
+                "Viau"
+            ],
+            "capacity_limits_teu": 2100000,
+            "throughput_details": "Handles approx 35 million tonnes annually. Crucial for EUD routes."
+        },
+        {
+            "name": "Port of Halifax",
+            "facilities": [
+                "PSA Halifax",
+                "Richmond Terminals"
+            ],
+            "capacity_limits_teu": 1200000,
+            "throughput_details": "Handles approx 4-5 million tonnes annually. Atlantic gateway for EUD."
+        }
+    ],
+    "countries": [
+        {
+            "country_name": "Austria",
+            "iso_code": "AT",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Belgium",
+            "iso_code": "BE",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Bulgaria",
+            "iso_code": "BG",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Croatia",
+            "iso_code": "HR",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Cyprus",
+            "iso_code": "CY",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Czechia",
+            "iso_code": "CZ",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Denmark",
+            "iso_code": "DK",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Estonia",
+            "iso_code": "EE",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Finland",
+            "iso_code": "FI",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "France",
+            "iso_code": "FR",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Germany",
+            "iso_code": "DE",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Greece",
+            "iso_code": "GR",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Hungary",
+            "iso_code": "HU",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Iceland",
+            "iso_code": "IS",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Ireland",
+            "iso_code": "IE",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Italy",
+            "iso_code": "IT",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Latvia",
+            "iso_code": "LV",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Lithuania",
+            "iso_code": "LT",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Luxembourg",
+            "iso_code": "LU",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Malta",
+            "iso_code": "MT",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Netherlands",
+            "iso_code": "NL",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Norway",
+            "iso_code": "NO",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Poland",
+            "iso_code": "PL",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Portugal",
+            "iso_code": "PT",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Romania",
+            "iso_code": "RO",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Slovakia",
+            "iso_code": "SK",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Slovenia",
+            "iso_code": "SI",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Spain",
+            "iso_code": "ES",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Sweden",
+            "iso_code": "SE",
+            "is_ceta_active": true,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Switzerland",
+            "iso_code": "CH",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Ukraine",
+            "iso_code": "UA",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "United Kingdom",
+            "iso_code": "GB",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        },
+        {
+            "country_name": "Argentina",
+            "iso_code": "AR",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Australia",
+            "iso_code": "AU",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        },
+        {
+            "country_name": "Bolivia",
+            "iso_code": "BO",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Brazil",
+            "iso_code": "BR",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Brunei",
+            "iso_code": "BN",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        },
+        {
+            "country_name": "Chile",
+            "iso_code": "CL",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        },
+        {
+            "country_name": "China",
+            "iso_code": "CN",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Colombia",
+            "iso_code": "CO",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Ecuador",
+            "iso_code": "EC",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Hong Kong",
+            "iso_code": "HK",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "India",
+            "iso_code": "IN",
+            "is_ceta_active": false,
+            "is_cepa_active": true,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Indonesia",
+            "iso_code": "ID",
+            "is_ceta_active": false,
+            "is_cepa_active": true,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Japan",
+            "iso_code": "JP",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        },
+        {
+            "country_name": "Malaysia",
+            "iso_code": "MY",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        },
+        {
+            "country_name": "New Zealand",
+            "iso_code": "NZ",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        },
+        {
+            "country_name": "Paraguay",
+            "iso_code": "PY",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Peru",
+            "iso_code": "PE",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        },
+        {
+            "country_name": "Singapore",
+            "iso_code": "SG",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        },
+        {
+            "country_name": "South Korea",
+            "iso_code": "KR",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Taiwan",
+            "iso_code": "TW",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "United States",
+            "iso_code": "US",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Uruguay",
+            "iso_code": "UY",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Venezuela",
+            "iso_code": "VE",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": false
+        },
+        {
+            "country_name": "Vietnam",
+            "iso_code": "VN",
+            "is_ceta_active": false,
+            "is_cepa_active": false,
+            "is_cptpp_active": true
+        }
+    ]
+}

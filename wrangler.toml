@@ -1,0 +1,9 @@
+name = "trade-dashboard"
+pages_build_output_dir = "out"
+compatibility_date = "2024-04-05"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "trade-dashboard-db"
+database_id = "bf1287e9-f76d-4150-b283-10755a0e882c"
