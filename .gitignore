@@ -24,7 +24,7 @@
 *.db
 !db/production.db
 db/unified_master.db
-raw_data/*.csv
-raw_data/*.zip
+raw_data/
 scratch/
+
 
