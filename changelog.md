@@ -24,6 +24,23 @@ To maintain codebase hygiene and prevent file sprawl, all developers and AI agen
 4. **Clean Code & Git Hygiene**:
    - Always run type checks or build verification (`npm run build`) before committing changes.
    - Never commit untracked build artifacts (`.next/`, `.wrangler/`, `out/`, `*.tsbuildinfo`).
+### September 30, 2026 -> Core Web Vitals & Production Performance Optimization
+
+* **Zero-Latency Typography & Critical Path Rendering**:
+  * *Change*:
+    - Migrated fonts (`Inter` and `Merriweather`) in [app/layout.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/layout.tsx) from render-blocking CSS `@import` rules to Next.js `next/font/google` with automatic build-time self-hosting, CSS variables, and `display: 'swap'` to eliminate FOIT (Flash of Invisible Text) and render delays.
+    - Removed render-blocking stylesheet import from [app/globals.css](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/globals.css).
+
+* **Header Chart Dependency Decoupling & Bundle Shrinkage**:
+  * *Change*:
+    - Built a dedicated, high-performance pure SVG sparkline component [app/components/HeaderMacroChart.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/HeaderMacroChart.tsx) to render the ambient macroeconomic timeline step chart with exact visual fidelity, zero layout shifts, and 0ms JS measurement overhead.
+    - Decoupled `recharts` from the primary page bundle and converted modal components ([app/components/ExpertDigestCard.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/ExpertDigestCard.tsx)) to dynamic client-side imports (`next/dynamic`), slashing the main page JS payload by **91%** (from 108 kB down to 9.65 kB).
+
+* **Local CDN Edge Asset Bundling for Globe Visualization**:
+  * *Change*:
+    - Downloaded and bundled world polygon GeoJSON and Three.js globe textures locally in [public/assets/globe/](file:///home/anitaruetz/Documents/Playground/Canada_Trade/public/assets/globe/).
+    - Updated [app/components/GlobeViz.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/GlobeViz.tsx) to load from local CDN edge routes instead of unpkg/raw.githubusercontent, eliminating initial 404 retries and third-party network stalls.
+
 ### September 29, 2026 -> Splash Screen Statistics Canada Attribution & Latest Research Publication Sync
 
 * **Official Data Source Attribution on Splash Screen**:

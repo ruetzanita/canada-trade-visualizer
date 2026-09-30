@@ -120,9 +120,9 @@ export default function GlobeViz({
   return (
     <Globe
       ref={globeEl}
-      globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-      bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-      backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+      globeImageUrl="/assets/globe/earth-dark.jpg"
+      bumpImageUrl="/assets/globe/earth-topology.png"
+      backgroundImageUrl="/assets/globe/night-sky.png"
       polygonsData={countries.features}
       polygonAltitude={0.01}
       polygonCapColor={getPolygonColor}

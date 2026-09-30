@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { AreaChart, Area, XAxis, ResponsiveContainer, ReferenceArea } from 'recharts';
 import { X, ChevronUp, ChevronDown, ExternalLink, Sparkles, Database } from 'lucide-react';
 import styles from './page.module.css';
 import { REGION_CONFIGS, getRegionConfig, getCountryRegion, resolveCountryDisplayName } from '../db/geo_metadata';
-import ExpertDigestCard from './components/ExpertDigestCard';
+import HeaderMacroChart from './components/HeaderMacroChart';
 
 // Dynamically import components so they only render on client
 const GlobeViz = dynamic(() => import('./components/GlobeViz'), { 
@@ -14,6 +13,7 @@ const GlobeViz = dynamic(() => import('./components/GlobeViz'), {
   loading: () => <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#555', zIndex: 0 }}>Loading Globe Visualization...</div>
 });
 const SankeyViz = dynamic(() => import('./components/SankeyViz'), { ssr: false });
+const ExpertDigestCard = dynamic(() => import('./components/ExpertDigestCard'), { ssr: false });
 
 export default function Dashboard() {
   const [region, setRegion] = useState('EUD');
@@ -168,29 +168,7 @@ export default function Dashboard() {
           MACRO DYNAMICS
         </div>
         <div className={styles.chartContainer}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={validGlobalChartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ffffff" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="month" hide />
-              <ReferenceArea 
-                x1={`${year}01`} 
-                x2={
-                  validGlobalChartData
-                    .filter(d => String(d.month).startsWith(String(year)))
-                    .map(d => String(d.month))
-                    .sort()
-                    .pop() || `${year}12`
-                } 
-                fill="rgba(240, 58, 71, 0.3)" 
-              />
-              <Area type="step" dataKey="value" stroke="rgba(255,255,255,0.8)" strokeWidth={1.5} fillOpacity={1} fill="url(#colorValue)" activeDot={false} />
-            </AreaChart>
-          </ResponsiveContainer>
+          <HeaderMacroChart data={validGlobalChartData} year={year} />
         </div>
         <div className={styles.headerYear}>
           {year}
