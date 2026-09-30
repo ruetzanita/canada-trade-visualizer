@@ -24,6 +24,14 @@ To maintain codebase hygiene and prevent file sprawl, all developers and AI agen
 4. **Clean Code & Git Hygiene**:
    - Always run type checks or build verification (`npm run build`) before committing changes.
    - Never commit untracked build artifacts (`.next/`, `.wrangler/`, `out/`, `*.tsbuildinfo`).
+### September 29, 2026 -> Splash Screen Statistics Canada Attribution & Latest Research Publication Sync
+
+* **Official Data Source Attribution on Splash Screen**:
+  * *Change*:
+    - Added Statistics Canada (CIMT) attribution badge and Open Government Licence – Canada citation to the interactive dashboard splash screen in `app/page.tsx`.
+    - Styled splash screen overlay and attribution container using dark glassmorphism standards in `app/page.module.css`.
+    - Refreshed edge production database (`db/production.db` and `db/production.sql`) and research dossier (`docs/LATEST_RESEARCH_PUBLICATION.md`).
+
 ### September 29, 2026 -> Autonomous Export Economist Pipeline: Deep Research Pro Live Execution, Trade Intelligence Rebranding & Four-Pillar Statesmanship Framework
 
 * **Autonomous Export Economist: Deep Research Pro Preview & Interactions API Integration**:

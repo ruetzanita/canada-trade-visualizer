@@ -130,10 +130,9 @@ CRITICAL INSTRUCTIONS:
      tag must be one of: "Policy Watch", "Bilateral Agreement", "Market Intelligence", "Clean Energy".
    - countries_affected: Array of valid country names mentioned.
    - primary_sources: Array of { title, url }.
-3. Backend-Only Archival:
-   - full_research_publication: The entire raw markdown text of the 5-section dossier for backend archiving.
    - economist_notes: The text extracted from Section 5 (Economist Field Notes & Early Signals).
-4. Selective Country Card Updates:
+   (Note: Do NOT output full_research_publication in JSON; the system attaches the raw research dossier automatically).
+3. Selective Country Card Updates:
    - ONLY generate updates for countries that experienced active, verified shifts in Section 4.
    - If a country experienced no active policy shifts this week, DO NOT include it in country_updates (leave its card untouched).
    - Each bullet_text must be strictly ≤ 20 words and include a Month/Year date (e.g., "Sep ${currentYear}: ...").
@@ -162,7 +161,6 @@ OUTPUT JSON FORMAT ONLY:
     "primary_sources": [
       { "title": "...", "url": "https://..." }
     ],
-    "full_research_publication": "...",
     "economist_notes": "..."
   },
   "country_updates": [
@@ -234,7 +232,10 @@ async function callGeminiModel(model, prompt, systemInstruction, enableGrounding
   const body = {
     systemInstruction: { parts: [{ text: systemInstruction }] },
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.2 }
+    generationConfig: { 
+      temperature: 0.2,
+      maxOutputTokens: 8192
+    }
   };
 
   if (jsonMode) {
@@ -314,12 +315,18 @@ async function main() {
   const deepResearchPrompt = buildDeepResearchPrompt(currentYear, quantitativeSummary);
   let researchBrief = '';
 
-  try {
-    researchBrief = await callInteractionsAgent(DEEP_RESEARCH_MODEL, deepResearchPrompt, ECONOMIST_SYSTEM_PROMPT);
-  } catch (err) {
-    console.warn(`⚠️ [Tier 1] Deep Research agent failed or timed out: ${err.message}`);
-    console.log(`🔄 [Tier 1 Fallback] Invoking Gemini 3.8 Flash with Google Search Grounding...`);
+  const forceFlash = process.env.FORCE_FALLBACK === 'true' || process.argv.includes('--flash');
+  if (forceFlash) {
+    console.log(`⚡ [Option 2: Fast Flash-Test] Invoking Gemini 3.8 Flash directly with Google Search Grounding...`);
     researchBrief = await callGeminiModel(DEFAULT_MODEL, deepResearchPrompt, ECONOMIST_SYSTEM_PROMPT, true);
+  } else {
+    try {
+      researchBrief = await callInteractionsAgent(DEEP_RESEARCH_MODEL, deepResearchPrompt, ECONOMIST_SYSTEM_PROMPT);
+    } catch (err) {
+      console.warn(`⚠️ [Tier 1] Deep Research agent failed or timed out: ${err.message}`);
+      console.log(`🔄 [Tier 1 Fallback] Invoking Gemini 3.8 Flash with Google Search Grounding...`);
+      researchBrief = await callGeminiModel(DEFAULT_MODEL, deepResearchPrompt, ECONOMIST_SYSTEM_PROMPT, true);
+    }
   }
 
   console.log(`\n📄 Tier 1 Research Brief received (${researchBrief.length} chars).`);
@@ -350,10 +357,16 @@ async function main() {
   const digest = structuredData.weekly_digest;
   const countryUpdates = structuredData.country_updates || [];
 
+  const wordCount = digest.summary ? digest.summary.trim().split(/\s+/).filter(Boolean).length : 0;
+  const headings = digest.summary ? (digest.summary.match(/^###\s+.+$/gm) || []) : [];
+
   console.log(`\n📰 WEEKLY DIGEST COMPILED:`);
   console.log(`   ID: ${digest.id}`);
   console.log(`   Headline: "${digest.headline}"`);
+  console.log(`   Summary Word Count: ${wordCount} words (Target: 1,600 - 2,200)`);
   console.log(`   Summary Paragraphs: ${digest.summary.split('\n\n').length}`);
+  console.log(`   Thematic Subheadings Found (${headings.length}):`);
+  headings.forEach(h => console.log(`     ${h}`));
   console.log(`   Key Developments: ${digest.key_developments?.length || 0}`);
   console.log(`   Countries Affected: ${(digest.countries_affected || []).join(', ')}`);
   console.log(`   Primary Sources: ${digest.primary_sources?.length || 0}`);

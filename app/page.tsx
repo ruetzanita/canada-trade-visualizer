@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { AreaChart, Area, XAxis, ResponsiveContainer, ReferenceArea } from 'recharts';
-import { X, ChevronUp, ChevronDown, ExternalLink, Sparkles } from 'lucide-react';
+import { X, ChevronUp, ChevronDown, ExternalLink, Sparkles, Database } from 'lucide-react';
 import styles from './page.module.css';
 import { REGION_CONFIGS, getRegionConfig, getCountryRegion, resolveCountryDisplayName } from '../db/geo_metadata';
 import ExpertDigestCard from './components/ExpertDigestCard';
@@ -112,17 +112,43 @@ export default function Dashboard() {
   return (
     <div className={styles.container}>
       {showSplash && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(11, 13, 23, 0.85)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
-          <h1 className="title" style={{ fontSize: '48px', marginBottom: '20px' }}>Canada Macro Trade</h1>
-          <p style={{ fontSize: '18px', maxWidth: '600px', textAlign: 'center', color: '#ccc', lineHeight: 1.6, marginBottom: '40px' }}>
-            Welcome to the interactive visualization of Canada&apos;s global export dynamics. Use the timeline scrubber to explore macroeconomic trade shifts across the European and Indo-Pacific markets.
-          </p>
-          <button 
-            style={{ background: '#F03A47', color: 'white', border: 'none', padding: '16px 32px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
-            onClick={() => setShowSplash(false)}
-          >
-            Enter Dashboard
-          </button>
+        <div className={styles.splashOverlay}>
+          <div className={styles.splashCard}>
+            <h1 className={`title ${styles.splashTitle}`}>Canada Macro Trade</h1>
+            <p className={styles.splashDescription}>
+              Welcome to the interactive visualization of Canada&apos;s global export dynamics. Use the timeline scrubber to explore macroeconomic trade shifts across the European and Indo-Pacific markets.
+            </p>
+            <button 
+              className={styles.splashButton}
+              onClick={() => setShowSplash(false)}
+            >
+              Enter Dashboard
+            </button>
+
+            <div className={styles.splashAttribution}>
+              <Database size={15} className={styles.splashAttributionIcon} />
+              <div className={styles.splashAttributionText}>
+                Quantitative trade data sourced from{' '}
+                <a 
+                  href="https://www.statcan.gc.ca" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className={styles.splashAttributionLink}
+                >
+                  Statistics Canada (CIMT)
+                </a>{' '}
+                under the{' '}
+                <a 
+                  href="https://open.canada.ca/en/open-government-licence-canada" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className={styles.splashAttributionLink}
+                >
+                  Open Government Licence – Canada
+                </a>.
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
