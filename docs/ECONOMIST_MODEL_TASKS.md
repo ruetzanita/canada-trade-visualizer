@@ -41,8 +41,21 @@ This document defines the tasks, sources, outputs, and archival rules for the au
 
 ### Expected Output Structure (5-Section Research Dossier)
 1. **Section 1: The Lead Editorial Summary (Trade Intelligence Brief)**
-   - Substantive macroeconomic editorial assessing Canada's weekly export performance and diversification momentum in EUD and IPD.
-   - **Length**: Minimum **3 full paragraphs**, up to **2 full pages** (no artificial truncation).
+   - Publication-grade macroeconomic policy monograph (Foreign Affairs / C.D. Howe standard) assessing Canada's weekly trade statecraft and diversification momentum.
+   - **Target Length**: Strictly **1,600 to 2,200 words** (no artificial truncation).
+   - **Three-Part Structure**:
+     1. *Sovereign Opening & Thesis* (~250 words)
+     2. *Thematic Deep Dives* (Cherry-picks **4 to 6 themes** from the 8-Theme Strategic Menu below; ~300–400 words per theme with explicit markdown subheadings)
+     3. *Panoramic Synthesis & The Canadian Bottom Line* (~250–350 words)
+   - **The 8 Strategic Themes Menu**:
+     1. Sovereign Trade Architecture & Treaty Execution
+     2. Critical Minerals & Strategic Supply Chains
+     3. Clean Energy Corridors & Industrial Decarbonization
+     4. Agrifood, Fertilizer & Global Food Security
+     5. National Corridors & Logistical Fluidity
+     6. Regulatory Compliance & Non-Tariff Barriers (EU CBAM/EUDR)
+     7. Macro Financial Conditions & Exporter Margins
+     8. Geopolitical Crosswinds & Sovereign Defense
    - Serves directly as the lead copy displayed in the UI Trade Intelligence modal.
 2. **Section 2: Tariffs & Policy Interventions (Global Trade Alert)**
    - Specific international movement, trade deals, tariff adjustments, countervailing duties, and subsidies targeting Canadian commodities in EUD and IPD.

@@ -126,6 +126,34 @@ export default function ExpertDigestCard({
     }
   };
 
+  const renderSummaryParagraph = (rawPara: string, idx: number) => {
+    const trimmed = rawPara.trim();
+    if (trimmed.startsWith('#')) {
+      const cleanHeader = trimmed.replace(/^#+\s*/, '');
+      return (
+        <h4 key={idx} className={styles.subheading}>
+          {cleanHeader}
+        </h4>
+      );
+    }
+
+    const parts = trimmed.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <p key={idx} className={styles.summaryText}>
+        {parts.map((part, pIdx) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+              <strong key={pIdx} className={styles.boldText}>
+                {part.slice(2, -2)}
+              </strong>
+            );
+          }
+          return part;
+        })}
+      </p>
+    );
+  };
+
   const paragraphs = digest?.summary
     ? digest.summary.split(/\n\s*\n/).filter(p => p.trim().length > 0)
     : [];
@@ -191,11 +219,7 @@ export default function ExpertDigestCard({
               {/* Editorial Summary (Multi-Paragraph Long Form) */}
               <div className={styles.summarySection}>
                 {paragraphs.length > 0 ? (
-                  paragraphs.map((para, idx) => (
-                    <p key={idx} className={styles.summaryText}>
-                      {para.trim()}
-                    </p>
-                  ))
+                  paragraphs.map((para, idx) => renderSummaryParagraph(para, idx))
                 ) : (
                   <p className={styles.summaryText}>{digest.summary}</p>
                 )}

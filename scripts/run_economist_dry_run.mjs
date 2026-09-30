@@ -64,18 +64,9 @@ function buildDeepResearchPrompt(currentYear, recentD1MetricsSummary) {
 Conduct an exhaustive macroeconomic trade investigation for the past 7 days concerning Canada's trade diversification posture across its 57 tracked partner nations in the European Union (EUD) and Indo-Pacific (IPD) basins.
 
 INTELLECTUAL MANDATE & NARRATIVE ARCHITECTURE:
-- View Canada as an active global economic actor navigating a shifting world order.
-- Structure your analysis around the four-pillar framework:
-  1. Sovereign Moves: What Canada is proactively doing with key partners in Europe and the Indo-Pacific.
-  2. Concrete Wins: The tangible strategic, diplomatic, and commercial breakthroughs achieved.
-  3. Macro Hurdles: The structural frictions, transit/port bottlenecks, and foreign regulatory hurdles Canada must overcome.
-  4. Macro Synthesis: How these national and international forces interplay to shape the broader Canadian economy and the livelihoods of Canadians.
-
-Investigate across whitelisted sources (Global Affairs Canada, Global Trade Alert, Hinrich Foundation, WTO, StatsCan):
-1. Sovereign Trade Architecture & Bilateral Milestones: Team Canada trade missions, CPTPP implementation (including UK accession), CETA utilization, Canada-Indonesia CEPA progress, and emerging ASEAN corridors.
-2. Strategic Supply Chains & Industrial Policy: Critical minerals partnerships, clean energy corridors (LNG, green hydrogen, nuclear), advanced manufacturing, and agrifood resilience.
-3. Macro Regulatory & Trade Policy Interventions (Global Trade Alert): International policy adjustments, tariffs, subsidies, or non-tariff barriers shaping Canadian market access in EUD and IPD.
-4. National Corridors & Logistical Fluidity: Physical supply chain realities—rail infrastructure (CN, CPKC), deep-water ports (Vancouver, Prince Rupert, Montreal, Halifax), and maritime freight dynamics.
+- View Canada as an active sovereign global economic actor navigating a shifting world order.
+- Demote US trade friction to existing baseline context; spotlight Canadian proactive commercial expansion into Europe and Asia.
+- Ground analysis in verifiable data from Global Affairs Canada, Global Trade Alert, Hinrich Foundation, WTO, and Statistics Canada.
 
 Context of Current Canadian Trade Volume:
 ${recentD1MetricsSummary}
@@ -83,9 +74,30 @@ ${recentD1MetricsSummary}
 Produce a structured, publication-grade 5-section macroeconomic research dossier:
 
 # SECTION 1: THE LEAD EDITORIAL SUMMARY (TRADE INTELLIGENCE BRIEF)
-- A panoramic, high-level strategic editorial assessing Canada's weekly momentum and her role in the global trade ecosystem.
-- Structure: Lead with Canada's proactive international initiatives -> detail the concrete strategic wins -> analyze the real structural hurdles -> synthesize what this means on a macro level for the Canadian economy and everyday citizens.
-- Length: Minimum 3 substantive paragraphs, up to 2 full pages. Write with authoritative, statesmanlike prose that provides genuine intellectual depth without artificial truncation.
+- Form: A publication-grade macroeconomic policy monograph (in the authoritative voice of Foreign Affairs, The Economist, or the C.D. Howe Institute).
+- Target Length: Strictly 1,600 to 2,200 words. Do NOT summarize or truncate prematurely.
+- Intellectual Focus: Canada as Sovereign Protagonist forging commercial corridors in Europe and the Indo-Pacific.
+
+Structure (Must strictly follow this 3-part layout):
+1. Part 1: Sovereign Opening & Strategic Thesis (~250 words)
+   - Establish Canada's weekly macroeconomic posture, strategic positioning, and overarching diversification momentum.
+
+2. Part 2: Thematic Deep Dives (Select the 4 to 6 most consequential themes from the 8-Theme Menu below; ~300–400 words per theme)
+   - Review the 8 Strategic Macro Themes below and select the 4 to 6 themes that experienced the most active, verified developments this week.
+   - For EACH selected theme, provide a clear markdown subheading (e.g. "### I. Sovereign Trade Architecture & Treaty Execution") followed by 2 to 3 substantive, data-rich analytical paragraphs detailing specific trade pacts, bilateral initiatives, logistics realities, and commercial breakthroughs.
+
+3. Part 3: Panoramic Synthesis & The Canadian Bottom Line (~250–350 words)
+   - Synthesize how these moving international pieces interplay to impact Canadian industrial capacity, national productivity, regional corridors, and the economic prosperity of everyday Canadian citizens.
+
+THE 8 STRATEGIC MACRO THEMES MENU (Cherry-pick the 4 to 6 most active this week):
+1. Sovereign Trade Architecture & Treaty Execution (CPTPP implementation, CETA utilization, Team Canada trade missions, CEPA/FIPA negotiations, rules of origin, bilateral frameworks).
+2. Critical Minerals & Strategic Supply Chains (Rare earths, lithium, nickel, cobalt, EV battery corridors, processing agreements with Japan, South Korea, Germany, and the UK).
+3. Clean Energy Corridors & Industrial Decarbonization (West Coast LNG export infrastructure, transatlantic clean hydrogen/ammonia pacts with Germany and the Netherlands, civil nuclear/SMR exports).
+4. Agrifood, Fertilizer & Global Food Security (Grains, wheat, pulses, canola, pork, potash exports to Indo-Pacific/European markets, sanitary and phytosanitary approvals).
+5. National Corridors & Logistical Fluidity (Physical logistics: CN/CPKC rail networks, gateway ports at Vancouver, Prince Rupert, Montreal, Halifax, Saint John, container dwell times, maritime freight rates).
+6. Regulatory Compliance & Non-Tariff Barriers (Navigating EU CBAM, EUDR deforestation regulations, ESG reporting standards, technical market-entry barriers).
+7. Macro Financial Conditions & Exporter Margins (Currency swings in CAD/USD, CAD/EUR, CAD/JPY, central bank rate divergences, EDC/BDC export credit facilities, commodity pricing benchmarks).
+8. Geopolitical Crosswinds & Sovereign Defense (Multipolar alignments, allied friendshoring/nearshoring, critical supply chain security, strategic insulation from continental protectionist risks).
 
 # SECTION 2: TARIFFS & POLICY INTERVENTIONS (GLOBAL TRADE ALERT)
 - Macro policy shifts, international trade agreements, tariff adjustments, countervailing measures, and subsidies impacting Canadian access in EUD and IPD.
@@ -113,7 +125,7 @@ CRITICAL INSTRUCTIONS:
    - id: "${editionId}"
    - edition_date: "${editionDate}"
    - headline: A sharp, professional journalistic headline (max 15 words).
-   - summary: The complete Section 1 Editorial Summary from the research dossier (minimum 3 paragraphs, do NOT truncate).
+   - summary: The complete Section 1 Editorial Summary from the research dossier (the full 1,600 to 2,200 words across all thematic subsections, preserving all markdown subheadings verbatim; do NOT truncate, condense, or summarize).
    - key_developments: Array of top 3-5 developments with { title, tag, source_name, source_url, description }.
      tag must be one of: "Policy Watch", "Bilateral Agreement", "Market Intelligence", "Clean Energy".
    - countries_affected: Array of valid country names mentioned.
