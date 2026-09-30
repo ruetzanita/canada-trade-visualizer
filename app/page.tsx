@@ -188,6 +188,7 @@ export default function Dashboard() {
           max={maxYear} 
           step="1" 
           value={year} 
+          aria-label="Timeline Year Scrubber (2021 to 2026)"
           onChange={(e) => setYear(parseInt(e.target.value, 10))}
           onMouseUp={(e) => setFetchYear(parseInt((e.target as HTMLInputElement).value, 10))}
           onTouchEnd={(e) => setFetchYear(parseInt((e.target as HTMLInputElement).value, 10))}
@@ -263,11 +264,11 @@ export default function Dashboard() {
                             {countryData.context.historical_background}
                           </div>
                           <div className={styles.tradeFocus}>
-                            <h4>Deals and Disruptions</h4>
+                            <h3>Deals and Disruptions</h3>
                             <p>{countryData.context.deals_and_disruptions?.[year] || "No major deals or disruptions recorded for this year."}</p>
                           </div>
                           <div className={styles.topImports}>
-                            <h4>Top 5 Major Imports from Canada</h4>
+                            <h3>Top 5 Major Imports from Canada</h3>
                             <ul>
                               {countryData.context.top_5_commodities?.map((c: string, i: number) => (
                                 <li key={i}>{c}</li>
@@ -311,7 +312,7 @@ export default function Dashboard() {
       {/* Bottom Title Bar */}
       <div className={`${styles.bottomBar} ${styles.glassPanel}`}>
         <div className={styles.bottomBarText}>
-          <h3 className={`title ${styles.mainTitle}`}>{currentRegionConfig.fullTitle}</h3>
+          <h2 className={`title ${styles.mainTitle}`}>{currentRegionConfig.fullTitle}</h2>
           <p className={styles.explainerText}>
             {currentRegionConfig.description}
           </p>

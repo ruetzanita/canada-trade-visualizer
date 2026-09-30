@@ -19,6 +19,11 @@ const merriweather = Merriweather({
 export const metadata = {
   title: 'Canada Macro Trade Dynamics',
   description: "Interactive visualization of Canada's global export dynamics in EUD and IPD markets.",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
