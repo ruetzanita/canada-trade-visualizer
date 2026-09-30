@@ -19,7 +19,7 @@
   display: flex;
   align-items: center;
   padding: 0 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .headerTitle {
@@ -69,7 +69,8 @@
   width: 100%;
   accent-color: var(--color-highlight);
   cursor: pointer;
-  touch-action: none; /* Prevent browser swipe gestures while scrubbing */
+  touch-action: none;
+  /* Prevent browser swipe gestures while scrubbing */
 }
 
 /* HUD Side Panel */
@@ -110,7 +111,8 @@
 /* Country Card */
 .countryCard {
   position: absolute;
-  bottom: 140px; /* prevent bleeding into bottom bar */
+  bottom: 140px;
+  /* prevent bleeding into bottom bar */
   left: 50%;
   transform: translateX(-50%);
   width: 450px;
@@ -141,10 +143,12 @@
 .countryCopyScrollable::-webkit-scrollbar {
   width: 6px;
 }
+
 .countryCopyScrollable::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
 }
+
 .countryCopyScrollable::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
@@ -163,7 +167,7 @@
   font-size: 28px;
   font-weight: 800;
   color: white;
-  border-bottom: 2px solid rgba(255,255,255,0.1);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 12px;
   margin-bottom: 0px;
 }
@@ -173,7 +177,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .metricValue {
@@ -187,7 +191,7 @@
 }
 
 .growthNegative {
-  color: var(--color-highlight);
+  color: #F59E0B;
 }
 
 .countryCopy {
@@ -200,7 +204,7 @@
 
 .tradeFocus {
   margin-top: 16px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   padding: 16px 20px;
   border-radius: 8px;
   border-left: 3px solid #F03A47;
@@ -224,7 +228,7 @@
 
 .topImports {
   margin-top: 16px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   padding: 16px 20px;
   border-radius: 8px;
 }
@@ -235,7 +239,7 @@
   letter-spacing: 1px;
   color: #94A3B8;
   margin-bottom: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 8px;
 }
 
@@ -270,7 +274,7 @@
   background: rgba(11, 13, 23, 0.65);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .bottomBarText {
@@ -294,13 +298,11 @@
   top: 80px;
   bottom: 120px;
   right: 20px;
-  width: 400px;
+  width: 340px;
   z-index: 100;
-  padding: 24px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  transform: scale(0.75);
-  transform-origin: top right;
 }
 
 .bottomControls {
@@ -316,12 +318,13 @@
 }
 
 .mobileViewToggleInline {
-  display: none; /* hidden on desktop */
+  display: none;
+  /* hidden on desktop */
 }
 
 .toggleBtn {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
   padding: 8px 16px;
   border-radius: 20px;
@@ -337,7 +340,36 @@
 }
 
 .toggleBtn:hover:not(.active) {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.digestFloatingBtn {
+  position: absolute;
+  bottom: 150px;
+  left: 28px;
+  z-index: 110;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  color: #00b4ff;
+  background: rgba(0, 180, 255, 0.10);
+  border: 1px solid rgba(0, 180, 255, 0.35);
+  border-radius: 24px;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.25s ease;
+}
+
+.digestFloatingBtn:hover {
+  background: rgba(0, 180, 255, 0.22);
+  border-color: #00b4ff;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 180, 255, 0.15);
 }
 
 .cardHeaderButtons {
@@ -349,7 +381,8 @@
   z-index: 10;
 }
 
-.closeBtn, .collapseBtn {
+.closeBtn,
+.collapseBtn {
   background: none;
   border: none;
   color: white;
@@ -362,7 +395,8 @@
   transition: opacity 0.2s;
 }
 
-.closeBtn:hover, .collapseBtn:hover {
+.closeBtn:hover,
+.collapseBtn:hover {
   opacity: 1;
 }
 
@@ -386,16 +420,19 @@
   flex-direction: column;
   gap: 20px;
   padding-top: 8px;
-  padding-right: 5px; /* prevent scrollbar from hiding content */
+  padding-right: 5px;
+  /* prevent scrollbar from hiding content */
 }
 
 .cardBodyInner::-webkit-scrollbar {
   width: 6px;
 }
+
 .cardBodyInner::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
 }
+
 .cardBodyInner::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
@@ -432,7 +469,9 @@
 
 /* --- MOBILE RESPONSIVENESS --- */
 @media (max-width: 768px) {
-  .headerTitle, .headerYear {
+
+  .headerTitle,
+  .headerYear {
     display: none !important;
   }
 
@@ -442,7 +481,7 @@
     padding: 0 10px;
     align-items: center;
   }
-  
+
   .chartContainer {
     width: 100%;
     height: 100%;
@@ -451,7 +490,8 @@
   }
 
   .timeline {
-    width: 80%; /* Shrink to prevent edge-swipe back navigation */
+    width: 80%;
+    /* Shrink to prevent edge-swipe back navigation */
     top: 90px;
     padding: 10px 15px;
   }
@@ -485,29 +525,45 @@
     gap: 15px;
   }
 
+  .digestFloatingBtn {
+    bottom: 150px;
+    left: 14px;
+    padding: 8px;
+    font-size: 0;
+    /* hide text, keep icon */
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    justify-content: center;
+  }
+
   .explainerText {
     display: none;
   }
-  
+
   .bottomBarText {
     text-align: center;
     width: 100%;
   }
-  
+
   .regionToggle {
     width: 100%;
     justify-content: center;
   }
 
-  .countryCard, .canadaCard {
+  .countryCard,
+  .canadaCard {
     width: 100%;
-    bottom: 0px; /* Make it a true bottom sheet on mobile */
+    bottom: 0px;
+    /* Make it a true bottom sheet on mobile */
     padding: 20px;
-    padding-bottom: 30px; /* safe area */
+    padding-bottom: 30px;
+    /* safe area */
     border-radius: 20px 20px 0 0;
     border-bottom: none;
     max-height: 75vh;
-    z-index: 200; /* above bottom bar */
+    z-index: 200;
+    /* above bottom bar */
   }
 
   .countryTitle {
@@ -525,14 +581,13 @@
   .sankeyMobileVisible {
     display: flex !important;
     position: absolute;
-    top: 180px;
-    bottom: 0px; /* stretch down completely */
-    left: 0;
-    width: 100vw;
-    right: auto;
+    top: 140px;
+    bottom: 75px;
+    left: 12px;
+    right: 12px;
+    width: auto;
     z-index: 90;
-    transform: scale(0.75);
-    transform-origin: top center;
+    padding: 14px;
   }
 }
 
@@ -541,8 +596,10 @@
   .mobileViewToggle {
     display: none;
   }
+
   .sankeyMobileVisible {
-    display: flex; /* normal desktop behavior is flex for container */
+    display: flex;
+    /* normal desktop behavior is flex for container */
   }
 }
 
@@ -551,16 +608,17 @@
     width: 300px;
     padding: 16px;
   }
-  
+
   .timeline {
     width: 480px;
     padding: 10px 20px;
   }
 
   .sankeyContainer {
-    width: 340px;
-    transform: scale(0.65);
-    transform-origin: top right;
+    width: 300px;
+    padding: 14px 16px;
+    top: 75px;
+    bottom: 115px;
   }
 
   .countryCard {

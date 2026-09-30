@@ -24,6 +24,234 @@ To maintain codebase hygiene and prevent file sprawl, all developers and AI agen
 4. **Clean Code & Git Hygiene**:
    - Always run type checks or build verification (`npm run build`) before committing changes.
    - Never commit untracked build artifacts (`.next/`, `.wrangler/`, `out/`, `*.tsbuildinfo`).
+### September 29, 2026 -> Autonomous Export Economist Pipeline: Deep Research Pro Live Execution, Trade Intelligence Rebranding & Four-Pillar Statesmanship Framework
+
+* **Autonomous Export Economist: Deep Research Pro Preview & Interactions API Integration**:
+  * *Change*:
+    - **Live Execution & Verification**: Conducted full live dry run of the two-tier economist pipeline via `scripts/run_economist_dry_run.mjs` against Google AI APIs. Successfully completed autonomous sweep in 230 seconds, producing Edition `2026-W40` with a 38,634-character, 5-section investigative publication.
+    - **Interactions API Compliance**: Implemented the required asynchronous Google Interactions API protocol (`POST /v1beta/interactions` with `"agent": "deep-research-pro-preview-12-2025"` and `"background": true`), paired with an exponential backoff polling mechanism.
+    - **High-Speed Tier 2 Compilation**: Deployed Gemini 3.8 Flash in JSON schema mode (`response_mime_type: "application/json"`) to distill the research publication into structured records for Cloudflare D1 `weekly_digests` and generate 16 selective, timestamped Country Card updates for D1 `country_context`.
+
+* **Feature Rebranding to "Trade Intelligence"**:
+  * *Change*:
+    - Retired the "Economist Digest" terminology in favor of **Trade Intelligence**.
+    - Updated floating dashboard launcher button to `Trade Intelligence` in `app/page.tsx`.
+    - Updated modal header badge to `Canada Export Intelligence` in `app/components/ExpertDigestCard.tsx`.
+
+* **Macroeconomic Four-Pillar Statesmanship Editorial Architecture**:
+  * *Change*:
+    - Shifted the intellectual perspective of the agent from reactionary, US-centric headline-chasing to **Canada as Sovereign Protagonist**.
+    - Instituted the **Four-Pillar Macroeconomic Architecture**:
+      1. *Sovereign Moves*: Where Canada is proactively deploying capital, Team Canada trade missions, diplomatic weight, and treaty architecture across EUD and IPD.
+      2. *Strategic Wins*: Tangible market access breakthroughs, tariff eliminations, investment corridors, and competitive advantages being secured.
+      3. *Macro Hurdles*: Real structural challenges—domestic logistics bottlenecks (rail/ports), foreign compliance barriers (EU CBAM, ESG audits), and shifting geopolitical crosswinds.
+      4. *Panoramic Synthesis*: How national and international forces interplay to shape Canadian economic resilience, productivity, and citizen prosperity.
+    - Demoted continental North American trade to baseline context while focusing the spotlight on Canadian expansion into Europe and the Indo-Pacific.
+    - Synchronized prompts across `workers/economist-agent/src/prompts.ts`, `scripts/run_economist_dry_run.mjs`, and `docs/ECONOMIST_MODEL_TASKS.md`.
+
+* **UI Cross-Region Background Navigation**:
+  * *Change*:
+    - Resolved UI issue where clicking an affected country focus chip from a different trade theater (e.g., clicking Australia while viewing Europe) left the Country Card in an endless loading state.
+    - Added `getCountryRegion()` utility to `db/geo_metadata.ts`.
+    - Updated `handleSelectCountry` in `app/page.tsx` to automatically detect region mismatches, switch the map region state, animate the 3D globe camera to the destination hemisphere, and open the Country Card with clear visual transit feedback.
+
+* **Dual-Tier Storage Architecture & Archival Plan**:
+  * *Change*:
+    - Codified the dual-layer storage model: Cloudflare D1 `weekly_digests` (edge operational storage) and `docs/` (human-auditable git-versioned markdown archive).
+    - Enforced backend archival separation: `full_research_publication` and `economist_notes` are stored in D1 but strictly stripped from public `/api/digest` responses to preserve speed and privacy.
+    - Configured `docs/LATEST_RESEARCH_PUBLICATION.md` as the active pointer for immediate local IDE inspection and diffing.
+    - Verified database storage footprint: `production.db` remains ~372 KB, with weekly editions adding ~42 KB (~2.18 MB/year), consuming < 4.5% of Cloudflare D1's 500 MB free tier over a decade.
+
+* **Files Modified / Created**:
+  - [scripts/run_economist_dry_run.mjs](file:///home/anitaruetz/Documents/Playground/Canada_Trade/scripts/run_economist_dry_run.mjs)
+  - [workers/economist-agent/src/prompts.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/workers/economist-agent/src/prompts.ts)
+  - [workers/economist-agent/src/index.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/workers/economist-agent/src/index.ts)
+  - [app/page.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/page.tsx)
+  - [app/components/ExpertDigestCard.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/ExpertDigestCard.tsx)
+  - [db/geo_metadata.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/db/geo_metadata.ts)
+  - [docs/ECONOMIST_MODEL_TASKS.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/docs/ECONOMIST_MODEL_TASKS.md)
+  - [docs/LATEST_RESEARCH_PUBLICATION.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/docs/LATEST_RESEARCH_PUBLICATION.md)
+  - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
+
+### September 29, 2026 -> Dev Server Diagnostics & Known Issues
+
+* **Dev Server 500 Error Resolution**:
+  * *Change*:
+    - **Stale Process Recovery**: Identified a zombie Next.js server process (PID 183896) bound to port 3001 that was returning `500 Internal Server Error` on all routes. Killed the stale process and restarted the dev server cleanly — site now compiles and serves `200` responses correctly.
+  * *Rationale*: The previous dev server instance had entered a bad state (possibly from a hot-reload crash), causing all page requests to hit the Next.js `_error` page with a generic 500. A fresh restart resolved the issue without code changes.
+
+* **Known Issues (Non-Blocking)**:
+  * ⚠️ **Missing GeoJSON Asset**: `GET /assets/globe/ne_110m_admin_0_countries.geojson` returns `404`. The 3D globe component references a Natural Earth dataset file that is not present in `public/assets/globe/`. Download and place `ne_110m_admin_0_countries.geojson` to resolve.
+  * ⚠️ **Recharts SSR Chart Sizing Warning**: Console warns `width(-1) and height(-1) of chart should be greater than 0`. A Recharts chart container has zero/negative dimensions during server-side rendering. Fix by adding explicit `minWidth` / `minHeight` to the chart's parent container, or by wrapping the chart in a client-only boundary.
+  * ⚠️ **Fast Refresh Full Reload**: Next.js Fast Refresh fell back to a full page reload on startup, likely due to non-component exports in a page file. Non-critical but may slow iterative development.
+
+### September 29, 2026 -> Autonomous Export Economist Agent & UI Expert Digest Card
+
+* **Autonomous Export Economist Agent & UI Expert Digest Card**:
+  * *Change*:
+    - **Two-Tier Agent Pipeline (`workers/economist-agent/`)**: Architected and implemented a scheduled Cloudflare Worker operating on a Sunday 20:00 UTC Cron Trigger. Tier 1 harnesses Deep Research Pro Preview (with Gemini Search Grounding fallback) to investigate, deliver, and publish an unstructured journalistic briefing featuring an editorial summary assessing weekly diversification momentum across whitelisted sources (Global Affairs Canada, Statistics Canada, Export Development Canada, Global Trade Alert, Hinrich Foundation, and the WTO). Tier 2 deploys Gemini 3.8 Flash to compile journalistic briefs into D1 `weekly_digests` and generate 20-word Country Card updates into D1 `country_context`.
+    - **Cloudflare D1 Qualitative Schema Migration**: Created migration `db/migrations/0001_add_qualitative_and_digest_tables.sql` establishing `country_context` (for dynamic Country Card qualitative data) and `weekly_digests` (for weekly journalistic briefings). Migrated and seeded all 54 active partner entities from static JSON into `production.db` and `unified_master.db`.
+    - **Edge API Modernization**: Updated `functions/api/country-metrics.ts` to dynamically query and merge `country_context` from D1 at the edge while retaining static JSON fallbacks for resilience. Built `functions/api/digest.ts` to serve weekly editions with structured citations and key developments.
+    - **Local Development Parity**: Updated `scripts/dev_server.mjs` and `scripts/build_production_db.mjs` to seamlessly extract, serve, and query `country_context` and `/api/digest` locally from `db/production.db`.
+    - **UI Expert Digest Card (`app/components/ExpertDigestCard.tsx`)**: Created a floating frosted-glass briefing modal displaying the weekly chief economist intelligence, key developments with source badges, verified citations, and interactive country chips that dynamically rotate and focus the 3D globe. Added an "Economist Digest" toggle to the dashboard's bottom controls.
+  * *Rationale*: Enable fully autonomous, edge-native updates to Canadian macroeconomic trade analysis on Cloudflare without requiring code commits or static site rebuilds, while equipping users with deep investigative intelligence.
+  * *Files Modified / Created*:
+    - [db/migrations/0001_add_qualitative_and_digest_tables.sql](file:///home/anitaruetz/Documents/Playground/Canada_Trade/db/migrations/0001_add_qualitative_and_digest_tables.sql)
+    - [scripts/migrate_and_seed_context.mjs](file:///home/anitaruetz/Documents/Playground/Canada_Trade/scripts/migrate_and_seed_context.mjs)
+    - [scripts/build_production_db.mjs](file:///home/anitaruetz/Documents/Playground/Canada_Trade/scripts/build_production_db.mjs)
+    - [scripts/dev_server.mjs](file:///home/anitaruetz/Documents/Playground/Canada_Trade/scripts/dev_server.mjs)
+    - [functions/api/country-metrics.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/functions/api/country-metrics.ts)
+    - [functions/api/digest.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/functions/api/digest.ts)
+    - [workers/economist-agent/wrangler.toml](file:///home/anitaruetz/Documents/Playground/Canada_Trade/workers/economist-agent/wrangler.toml)
+    - [workers/economist-agent/package.json](file:///home/anitaruetz/Documents/Playground/Canada_Trade/workers/economist-agent/package.json)
+    - [workers/economist-agent/src/prompts.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/workers/economist-agent/src/prompts.ts)
+    - [workers/economist-agent/src/gemini.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/workers/economist-agent/src/gemini.ts)
+    - [workers/economist-agent/src/index.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/workers/economist-agent/src/index.ts)
+    - [app/components/ExpertDigestCard.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/ExpertDigestCard.tsx)
+    - [app/components/ExpertDigestCard.module.css](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/ExpertDigestCard.module.css)
+    - [app/page.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/page.tsx)
+    - [app/page.module.css](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/page.module.css)
+    - [docs/ARCHITECTURE.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/docs/ARCHITECTURE.md)
+    - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
+
+### September 29, 2026 -> YoY / YTD Metric Calculation Alignment & Partial-Year Detection Fix
+
+* **YoY / YTD Metric Calculation Alignment & Partial-Year Detection Fix**:
+  * *Change*:
+    - **Fixed Partial-Year (YTD) Misclassification**: Resolved a bug in `functions/api/country-metrics.ts` and `scripts/dev_server.mjs` where aggregate grouping of South American countries into `"Rest of South America"` inflated the `currentMonths` array to 49 entries (7 months * 7 nations). This caused `isPartialYear` (`maxMonths < 12`) to evaluate to `false`, falsely categorizing incomplete years (e.g., 2026 with 7 reported months) as full 12-month `YoY` periods.
+    - **Dataset-Wide Unique Month Evaluation**: Replaced individual country array inspection with dataset-wide distinct calendar month tracking (`uniqueCurrentMonths = new Set()`) to accurately detect partial reporting periods (`uniqueCurrentMonths.size < 12`).
+    - **Synchronized YTD Month-for-Month Comparison**: Ensured that partial years execute the second-pass alignment against the exact matching calendar months of the previous year (`uniqueCurrentMonths.has(rMonth)`), properly comparing Jan–Jul 2026 against Jan–Jul 2025.
+    - **Restored Economic Momentum Accuracy**: Corrected growth metrics across the board (e.g., UK restored from -1.12% to +94.73%, Netherlands from -15.87% to +55.00%, France from -19.14% to +58.72%, China from -26.78% to +37.93%, Mexico from -29.57% to +23.54%), properly illuminating trade expansion on the Sankey diagram and Country Cards.
+  * *Rationale*: Ensure that economic momentum indicators reflect true apples-to-apples timeframe comparisons for active fiscal years rather than penalizing ongoing quarters against prior full-year baselines.
+  * *Files Modified*:
+    - [functions/api/country-metrics.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/functions/api/country-metrics.ts)
+    - [scripts/dev_server.mjs](file:///home/anitaruetz/Documents/Playground/Canada_Trade/scripts/dev_server.mjs)
+    - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
+
+### September 29, 2026 -> Brand Color Disambiguation: Reserving Red Exclusively for Canada
+
+* **Brand Color Disambiguation: Reserving Red Exclusively for Canada**:
+  * *Change*:
+    - **Reassigned Contraction & Loss Color**: Replaced Rose (`#F43F5E` / `#FB7185`) and Red (`var(--color-highlight)`) across the Sankey diagram and Country Cards with Amber (`#F59E0B` / `#FBBF24`).
+    - **Preserved Canada Brand Distinction**: Strictly reserved Canadian Crimson (`#F03A47`) exclusively for Canada (Canada Sankey root node, Canada 3D globe polygon, Canada country profile card, and regional macro outflow headers).
+    - **Updated UI Elements**: Updated `getGrowthColor` in `app/components/SankeyViz.tsx`, the Sankey legend dot, `.tooltipGrowthNeg` in `app/components/SankeyViz.module.css`, and `.growthNegative` in `app/page.module.css`.
+  * *Rationale*: Prevent cognitive dissonance and visual confusion between Canada's national color identity and economic underperformance or contraction metrics.
+  * *Files Modified*:
+    - [app/components/SankeyViz.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/SankeyViz.tsx)
+    - [app/components/SankeyViz.module.css](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/SankeyViz.module.css)
+    - [app/page.module.css](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/page.module.css)
+    - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
+
+### September 29, 2026 -> Full Historical Dataset Harmonization & 1.0x True Economic Baseline Resolution
+
+* **Full Historical Dataset Harmonization & 1.0x True Economic Baseline Resolution**:
+  * *Change*:
+    - **Diagnosed Legacy Triple-Counting Ingestion Flaw**: Discovered that historical data (2021–2025) in previous builds was inflated to exactly 3.0x Canadian export values due to wildcard ingestion of `ODPFN016` (HS8), `ODPFN018` (HS6), and `ODPFN020` (HS2), which duplicated each transaction and resulted in ~1.35M duplicate rows per year with `commodity_code IS NULL`.
+    - **Resolved Front-End UI Anomalies**: Comparing new authentic 2026 data (1.0x) against legacy inflated 2025 data (3.0x) had produced artificial -55% to -75% collapses across all country cards, a steep 70% drop cliff in the header AreaChart in Jan 2026, and false anomaly detector flags.
+    - **Full Pipeline Re-Ingestion (`--all`)**: Updated `scripts/ingest_raw_data.mjs` to execute high-speed index dropping and rebuilding, clean purge of all phantom rows, and pristine re-ingestion of 6,587,851 rows strictly from `ODPFN016_*.csv` across all years (2021–2026).
+    - **Native Partner Country Sourcing**: Ingested Philippines (`PH`), Thailand (`TH`), and Bangladesh (`BD`) directly and authentically from raw `ODPFN016` files, superseding the legacy 3x `patch_missing_countries.sql`.
+    - **Materialized Summary Recomputation**: Recomputed all 4,020 rows in `macro_monthly_summary` across all 60 tracked countries and 67 months (`202101` through `202607`).
+    - **Production Edge Database Compilation**: Rebuilt `db/production.db` and updated `db/production.sql` via `scripts/build_production_db.mjs`. Verified with `npm test` and `npm run build:prod`. All trade figures now match official Statistics Canada releases (e.g., US YTD at -0.61%, Australia at +3.70%, China at +37.93%).
+  * *Rationale*: Restore 100% economic fidelity, eliminate chart cliffs and erroneous negative growth percentages, and guarantee that front-end UI outputs reflect authentic international trade balances.
+  * *Files Modified*:
+    - [scripts/ingest_raw_data.mjs](file:///home/anitaruetz/Documents/Playground/Canada_Trade/scripts/ingest_raw_data.mjs)
+    - [db/production.db](file:///home/anitaruetz/Documents/Playground/Canada_Trade/db/production.db)
+    - [db/production.sql](file:///home/anitaruetz/Documents/Playground/Canada_Trade/db/production.sql)
+    - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
+
+### September 29, 2026 -> Advanced Sankey Modernization, Bidirectional Interactivity & Responsive Layout
+
+* **Advanced Sankey Modernization, Bidirectional Interactivity & Responsive Layout**:
+  * *Change*:
+    - **Bidirectional Dashboard Synchronization**: Connected `selectedCountry` and `onSelectCountry` across `app/page.tsx`, `SankeyViz.tsx`, and `GlobeViz.tsx`. Clicking any country node or flow ribbon in the Sankey immediately synchronizes the 3D globe camera to focus that country, updates polygon highlights, and displays the country card.
+    - **Dynamic State Highlighting**: Implemented synchronized hover and selection states. Selecting or hovering over a country illuminates its node and flow ribbon while softly dimming unrelated flows (`opacity: 0.08`–`0.28`).
+    - **SVG Linear Gradient Ribbons**: Replaced flat monochrome link strokes with dynamic SVG linear gradients flowing seamlessly from Canada's crimson (`#F03A47`) to each target nation's momentum-based theme color.
+    - **Multi-Metric YoY Momentum & Share Badging**: Integrated YoY momentum color-coding (emerald `#10B981` for growth >5%, rose `#F43F5E` for contraction <-5%, and cyan `#00B4D8` for steady flows) and added regional export market share percentage labels (`· XX.X%`).
+    - **Adaptive Density Controls (Top 8 / Top 15 / All)**: Added a glassmorphic segmented pill toggle in the Sankey header, allowing users to toggle between uncluttered Top 8, detailed Top 15, or comprehensive All views with automatic aggregation into an "Other" category.
+    - **Native Responsive Vector Layout**: Eliminated CSS `transform: scale(0.75)` and `scale(0.65)` scaling hacks in `app/page.module.css`. Styled `.sankeyContainer` natively for razor-sharp typography, accurate Recharts SVG bounding boxes, and collision-free label rendering.
+    - **Glassmorphic HUD Tooltip**: Built a custom dark glass HUD tooltip displaying formatted CAD trade value (`$X.XXB`/`$X.XXM`), regional export share, YoY trajectory with direction arrows, and contextual click prompts.
+    - **Verified Local Production Build**: Validated with `npm test`, `npm run build`, and `npm run build:prod`. All Next.js static pages exported cleanly.
+  * *Rationale*: Elevate the Sankey from a static visual to an interactive analytical instrument that unifies the dashboard's 3D globe and country profile workflows.
+  * *Files Modified*:
+    - [app/components/SankeyViz.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/SankeyViz.tsx)
+    - [app/components/SankeyViz.module.css](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/SankeyViz.module.css)
+    - [app/components/GlobeViz.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/GlobeViz.tsx)
+    - [app/page.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/page.tsx)
+    - [app/page.module.css](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/page.module.css)
+    - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
+
+### September 29, 2026 -> 2026 Database Ingestion & Production Edge Compilation (Through July 2026)
+
+* **2026 Database Ingestion & Production Edge Compilation**:
+  * *Change*:
+    - **Upgraded Ingestion Pipeline**: Refactored `scripts/ingest_raw_data.mjs` to target `ODPFN016` CSVs exclusively (preventing triple-counting from HS6/HS2 files), add `--year` targeting, automatically purge replaced cumulative months, and automatically recompute `macro_monthly_summary`.
+    - **Partner Country Harmonization**: Ensured `countries` table includes Philippines (`PH`), Thailand (`TH`), and Bangladesh (`BD`), and applied missing historical baselines (2021–2025).
+    - **Raw Data Ingested**: Ingested 693,557 tracked rows from `raw_data/CIMT-CICM_Dom_Exp_2026/CIMT-CICM_Dom_Exp_2026/ODPFN016_202607N.csv` into `db/unified_master.db` covering January through July 2026.
+    - **Materialized Summary Recomputed**: Generated 420 monthly aggregate rows in `macro_monthly_summary` for 2026 across 60 partner countries. Total database coverage extended to 67 distinct months (`202101` – `202607`) and 4,020 summary records.
+    - **Production Edge Database Rebuilt**: Compiled fresh `db/production.db` via `scripts/build_production_db.mjs`. Verified all API endpoints, temporal metadata, and Next.js static builds pass without errors.
+  * *Rationale*: Supply complete, authentic trade data through July 2026 to power YTD comparisons on the live visualizer.
+  * *Files Modified*:
+    - [scripts/ingest_raw_data.mjs](file:///home/anitaruetz/Documents/Playground/Canada_Trade/scripts/ingest_raw_data.mjs)
+    - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
+  * *Databases Updated*:
+    - [db/unified_master.db](file:///home/anitaruetz/Documents/Playground/Canada_Trade/db/unified_master.db)
+    - [db/production.db](file:///home/anitaruetz/Documents/Playground/Canada_Trade/db/production.db)
+
+### September 29, 2026 -> Canonical Raw Data Sourcing Documentation & 2026 Dataset Refresh
+
+* **Canonical Raw Data Sourcing Documentation & 2026 Dataset Refresh**:
+  * *Change*:
+    - **Documented Canonical Open Government Endpoints**: Added documentation to `docs/README.md`, `docs/Canada_Trade_Storage_Architecture.md`, and `README.md` identifying the official Open Government Portal dataset (Dataset ID `2909a648-5753-4924-878a-b069392d9cde` / Catalogue 71-607-X) and direct cumulative bulk `.zip` download endpoints (`https://www150.statcan.gc.ca/n1/pub/71-607-x/2021004/zip/CIMT-CICM_Dom_Exp_YYYY.zip`). Clarified the 150,000-row query limit of the web query tool versus bulk downloads.
+    - **Purged Expired 2026 Dataset**: Removed outdated April 2026 data (`ODPFN016_202604N.csv`) and cleaned up temporary web test exports (`report*.csv`).
+    - **Replaced with Updated 2026 Dataset**: Renamed `raw_data/CIMT-CICM_Dom_Exp_2026 (Copy 1)` to canonical `raw_data/CIMT-CICM_Dom_Exp_2026/`, containing the full cumulative January–July 2026 dataset (`ODPFN016_202607N.csv`, 754,648 rows) and associated HS6/HS2 files.
+  * *Rationale*: Eliminate dataset sprawl, remove expired data, and provide unambiguous documentation for future data maintainers.
+  * *Files Modified*:
+    - [docs/README.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/docs/README.md)
+    - [docs/Canada_Trade_Storage_Architecture.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/docs/Canada_Trade_Storage_Architecture.md)
+    - [README.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/README.md)
+    - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
+  * *Directories Updated*:
+    - Replaced `raw_data/CIMT-CICM_Dom_Exp_2026/` with cumulative July 2026 dataset.
+
+### September 29, 2026 -> Dynamic Visualization Metadata & Temporal Decoupling
+
+* **Dynamic Visualization Metadata & Temporal Decoupling**:
+  * *Change*:
+    - **Centralized Geographic Metadata**: Created `db/geo_metadata.ts` consolidating region configurations (`REGION_CONFIGS`), camera points of view, and exact coordinate lookups (`COUNTRY_COORDINATES`) across all European, Indo-Pacific, and Latin American partner countries.
+    - **Dynamic 3D Globe Visualization**: Refactored `GlobeViz.tsx` to dynamically derive highlighted target countries from live `countryMetrics` (falling back to `getRegionCountries`), compute animated trade arcs using `getCountryCoordinates`, and orient camera viewpoints via `getRegionConfig(region).cameraPOV`. Eliminated all hardcoded country arrays and static coordinate dictionaries from the component.
+    - **Temporal Metadata Pipeline**: Updated `functions/api/country-metrics.ts` and `scripts/dev_server.mjs` to dynamically query database temporal boundaries (`min_month`, `max_month`, `availableYears`) from `macro_monthly_summary` and include a structured `metadata` object in the API payload.
+    - **Decoupled Frontend Slider & HUD**: Refactored `app/page.tsx` to drive the timeline scrubber bounds (`minYear`, `maxYear`, `availableYears`) from backend temporal metadata. Replaced hardcoded string ternaries with centralized `RegionConfig` descriptors (`fullTitle`, `marketName`, `description`) and replaced arbitrary 80% drop cutoff heuristics with robust numeric data validation.
+    - **Enhanced Automated Testing**: Added temporal metadata validation to `scratch/test_api_logic.mjs` within the `npm test` pipeline.
+  * *Rationale*: Eliminate tight coupling and hardcoded visualization coordinates, prepare the architecture for multi-region extensions outlined in the TradeSentinel blueprint, and ensure temporal controls automatically adjust as new monthly trade datasets are ingested.
+  * *Files Created*:
+    - [db/geo_metadata.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/db/geo_metadata.ts)
+  * *Files Modified*:
+    - [app/components/GlobeViz.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/components/GlobeViz.tsx)
+    - [app/page.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/page.tsx)
+    - [functions/api/country-metrics.ts](file:///home/anitaruetz/Documents/Playground/Canada_Trade/functions/api/country-metrics.ts)
+    - [scripts/dev_server.mjs](file:///home/anitaruetz/Documents/Playground/Canada_Trade/scripts/dev_server.mjs)
+    - [scratch/test_api_logic.mjs](file:///home/anitaruetz/Documents/Playground/Canada_Trade/scratch/test_api_logic.mjs)
+    - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
+
+### September 29, 2026 -> Project Review Hygiene Hardening & Automated Testing
+
+* **Project Review Hygiene Hardening & Automated Testing**:
+  * *Change*:
+    - **Redundant Root Markdown Removed**: Deleted duplicate `Canada_Trade_Storage_Architecture.md` from workspace root, retaining canonical copy in `docs/Canada_Trade_Storage_Architecture.md`.
+    - **Ghost Database & Directories Purged**: Removed 0-byte ghost databases (`lib/unified_master.db` and `archive/unified_master.db`) and removed empty `lib/` directory.
+    - **ESLint & JSX Syntax Hardening**: Added `.eslintrc.json` extending `next/core-web-vitals` and escaped unescaped apostrophe in `app/page.tsx`.
+    - **Test Automation Standardized**: Updated `package.json` `"test"` script to run `node --experimental-strip-types scratch/test_api_logic.mjs && next lint`, verifying SQLite production metrics extraction and ESLint validation.
+  * *Rationale*: Clean up directory sprawl, satisfy root directory policy, and provide automated test verification for backend queries and frontend code.
+  * *Files Created*:
+    - [.eslintrc.json](file:///home/anitaruetz/Documents/Playground/Canada_Trade/.eslintrc.json)
+  * *Files Removed*:
+    - `Canada_Trade_Storage_Architecture.md` (root copy)
+    - `lib/unified_master.db`
+    - `archive/unified_master.db`
+  * *Files Modified*:
+    - [app/page.tsx](file:///home/anitaruetz/Documents/Playground/Canada_Trade/app/page.tsx)
+    - [package.json](file:///home/anitaruetz/Documents/Playground/Canada_Trade/package.json)
+    - [changelog.md](file:///home/anitaruetz/Documents/Playground/Canada_Trade/changelog.md)
 
 ### August 12, 2026 -> Directory Review & Cleanup Strategy Execution
 

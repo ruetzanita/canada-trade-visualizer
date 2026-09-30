@@ -17,7 +17,7 @@ try {
     // Read schemas
     const sourceDb = new Database(sourceDbPath, { readonly: true });
     
-    const tables = ['countries', 'macro_monthly_summary'];
+    const tables = ['countries', 'macro_monthly_summary', 'country_context', 'weekly_digests'];
     
     for (const table of tables) {
         // Get table schema

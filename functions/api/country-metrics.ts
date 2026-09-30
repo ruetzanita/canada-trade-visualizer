@@ -64,6 +64,55 @@ async function getGlobalMacroValueByMonth(db: any) {
   `);
 }
 
+async function getTemporalMetadata(db: any) {
+  const rows = await executeQuery(db, `
+    SELECT 
+      MIN(report_month) as min_month,
+      MAX(report_month) as max_month
+    FROM macro_monthly_summary
+  `);
+  const minMonth = rows[0]?.min_month ? String(rows[0].min_month) : '202101';
+  const maxMonth = rows[0]?.max_month ? String(rows[0].max_month) : '202604';
+  const minYear = parseInt(minMonth.substring(0, 4), 10);
+  const maxYear = parseInt(maxMonth.substring(0, 4), 10);
+  const availableYears: number[] = [];
+  for (let y = minYear; y <= maxYear; y++) {
+    availableYears.push(y);
+  }
+  return {
+    minYear,
+    maxYear,
+    availableYears,
+    latestDataMonth: maxMonth,
+    earliestDataMonth: minMonth
+  };
+}
+
+async function getCountryContextMap(db: any): Promise<Record<string, any>> {
+  try {
+    const rows = await executeQuery(db, `SELECT * FROM country_context`);
+    if (!rows || rows.length === 0) return {};
+    const map: Record<string, any> = {};
+    for (const r of rows) {
+      try {
+        map[r.country_name] = {
+          historical_background: r.historical_background,
+          top_5_commodities: typeof r.top_5_commodities === 'string' ? JSON.parse(r.top_5_commodities) : r.top_5_commodities,
+          trade_stance: r.trade_stance,
+          deals_and_disruptions: typeof r.deals_and_disruptions === 'string' ? JSON.parse(r.deals_and_disruptions) : r.deals_and_disruptions,
+          source_link: r.source_link,
+          last_updated_at: r.last_updated_at
+        };
+      } catch {
+        map[r.country_name] = r;
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 export async function onRequest(context: any) {
   const { request, env } = context;
 
@@ -82,17 +131,20 @@ export async function onRequest(context: any) {
     const year = parseInt(yearParam, 10);
     const prevYear = year - 1;
 
-    // Load qualitative data from static imports
+    // Load qualitative data from static imports as baseline
     const eudData: Record<string, any> = EUD_data || {};
     const ipdData: Record<string, any> = IPD_data || {};
-    const allContext = { ...eudData, ...ipdData } as any;
 
     // Fetch from DB using helper
-    const [rows, monthlyRows, globalMonthlyRows] = await Promise.all([
+    const [rows, monthlyRows, globalMonthlyRows, metadata, d1ContextMap] = await Promise.all([
       getMacroValueByCountryAndMonth(d1Db, year, prevYear),
       getMacroValueByMonth(d1Db, year, prevYear),
-      getGlobalMacroValueByMonth(d1Db)
+      getGlobalMacroValueByMonth(d1Db),
+      getTemporalMetadata(d1Db),
+      getCountryContextMap(d1Db)
     ]);
+
+    const allContext = { ...eudData, ...ipdData, ...d1ContextMap } as any;
 
     const chartData = monthlyRows.map((r: any) => ({
       month: r.report_month,
@@ -140,15 +192,30 @@ export async function onRequest(context: any) {
       }
 
       if (rYear === year) {
-        countryMap[cName].currentMonths.push(rMonth);
+        if (!countryMap[cName].currentMonths.includes(rMonth)) {
+          countryMap[cName].currentMonths.push(rMonth);
+        }
         countryMap[cName].currentTotal += Number(row.total_export_value_cad);
       } else if (rYear === prevYear) {
         countryMap[cName].prevTotal += Number(row.total_export_value_cad);
       }
     }
 
-    // Second pass: for YTD, we need prev year values only for matching months
-    if (year >= 2026) {
+    // Collect distinct calendar months present in the selected year across the dataset
+    const uniqueCurrentMonths = new Set<string>();
+    for (const row of rows) {
+      const rMonthStr = String(row.report_month);
+      if (rMonthStr.startsWith(year.toString())) {
+        uniqueCurrentMonths.add(rMonthStr.substring(4, 6));
+      }
+    }
+
+    // Determine if the requested year is partial (YTD) or a complete 12-month year (YoY)
+    const isPartialYear = uniqueCurrentMonths.size > 0 && uniqueCurrentMonths.size < 12;
+    const calculationType = isPartialYear ? 'YTD' : 'YoY';
+
+    // Second pass: for YTD (partial year), compute prev year values only for matching months
+    if (isPartialYear) {
       for (const row of rows) {
         if (!row.country_name) continue;
         let cName = String(row.country_name);
@@ -160,14 +227,15 @@ export async function onRequest(context: any) {
         const rYear = parseInt(rMonthStr.substring(0, 4), 10);
         const rMonth = rMonthStr.substring(4, 6);
 
-        if (rYear === prevYear && countryMap[cName].currentMonths.includes(rMonth)) {
-          countryMap[cName].ytdPrevTotal += Number(row.total_export_value_cad);
+        if (rYear === prevYear && uniqueCurrentMonths.has(rMonth)) {
+          if (countryMap[cName]) {
+            countryMap[cName].ytdPrevTotal += Number(row.total_export_value_cad);
+          }
         }
       }
     }
 
     const results = [];
-    const calculationType = year <= 2025 ? 'YoY' : 'YTD';
 
     for (const cName in countryMap) {
       const cmap = countryMap[cName];
@@ -205,9 +273,18 @@ export async function onRequest(context: any) {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, data: results, chartData, globalChartData }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      data: results, 
+      chartData, 
+      globalChartData,
+      metadata 
+    }), {
       status: 200,
-      headers: { 'content-type': 'application/json' }
+      headers: { 
+        'content-type': 'application/json',
+        'cache-control': 'no-store, no-cache, must-revalidate'
+      }
     });
   } catch (error: any) {
     return new Response(JSON.stringify({ 

@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts';
-import { X, Play, ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
+import { AreaChart, Area, XAxis, ResponsiveContainer, ReferenceArea } from 'recharts';
+import { X, ChevronUp, ChevronDown, ExternalLink, Sparkles } from 'lucide-react';
 import styles from './page.module.css';
+import { REGION_CONFIGS, getRegionConfig, getCountryRegion, resolveCountryDisplayName } from '../db/geo_metadata';
+import ExpertDigestCard from './components/ExpertDigestCard';
 
 // Dynamically import components so they only render on client
 const GlobeViz = dynamic(() => import('./components/GlobeViz'), { 
@@ -17,25 +19,28 @@ export default function Dashboard() {
   const [region, setRegion] = useState('EUD');
   const [year, setYear] = useState(2026);
   const [fetchYear, setFetchYear] = useState(2026);
+  const [availableYears, setAvailableYears] = useState<number[]>([2021, 2022, 2023, 2024, 2025, 2026]);
+  const [minYear, setMinYear] = useState<number>(2021);
+  const [maxYear, setMaxYear] = useState<number>(2026);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [countryData, setCountryData] = useState<any>(null);
   const [macroValue, setMacroValue] = useState(0);
   const [showSplash, setShowSplash] = useState(true);
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [, setChartData] = useState<any[]>([]);
   const [globalChartData, setGlobalChartData] = useState<any[]>([]);
   const [allCountryMetrics, setAllCountryMetrics] = useState<any[]>([]);
   const [isCardCollapsed, setIsCardCollapsed] = useState(false);
   const [activeMobileView, setActiveMobileView] = useState<'globe' | 'sankey'>('globe');
+  const [showDigest, setShowDigest] = useState(false);
+
+  const currentRegionConfig = getRegionConfig(region);
 
   // Fetch API data when fetchYear or region changes
   useEffect(() => {
-    // Calling the backend API implemented earlier
     fetch(`/api/country-metrics?year=${fetchYear}&region=${region}`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data) {
-          // Calculate macro value (Total for target market vs Canada absolute)
-          // Simplified for now based on API response
           const total = data.data.reduce((acc: number, curr: any) => acc + curr.currentValue, 0);
           setMacroValue(total);
           setAllCountryMetrics(data.data);
@@ -45,6 +50,17 @@ export default function Dashboard() {
           }
           if (data.globalChartData) {
             setGlobalChartData(data.globalChartData);
+          }
+          if (data.metadata) {
+            if (Array.isArray(data.metadata.availableYears) && data.metadata.availableYears.length > 0) {
+              setAvailableYears(data.metadata.availableYears);
+            }
+            if (typeof data.metadata.minYear === 'number') {
+              setMinYear(data.metadata.minYear);
+            }
+            if (typeof data.metadata.maxYear === 'number') {
+              setMaxYear(data.metadata.maxYear);
+            }
           }
         }
       })
@@ -70,21 +86,28 @@ export default function Dashboard() {
     "Moving forward, sustained investment in innovation and trade capacity will be vital to capitalizing on these evolving global market opportunities and securing long-term economic prosperity for all Canadians across every sector and region."
   ];
 
+  // Robust data filtering without arbitrary drop-percentage cutoffs
   const validGlobalChartData = React.useMemo(() => {
-    const validData = [];
-    for (let i = 0; i < globalChartData.length; i++) {
-      if (i > 0) {
-        const prevValue = globalChartData[i - 1].value;
-        const currValue = globalChartData[i].value;
-        if (prevValue > 0 && currValue < prevValue * 0.2) {
-          // Drops by > 80% compared to the previous month, indicating dummy data
-          break;
-        }
-      }
-      validData.push(globalChartData[i]);
-    }
-    return validData;
+    return globalChartData.filter(d => d && typeof d.value === 'number' && d.value > 0);
   }, [globalChartData]);
+
+  const handleSelectCountry = (country: string | null) => {
+    if (!country) {
+      setSelectedCountry(null);
+      return;
+    }
+
+    const resolved = resolveCountryDisplayName(country);
+    const targetRegion = getCountryRegion(resolved);
+
+    // If target country belongs to a specific viewable region (EUD or IPD) that differs from active view, switch region
+    if (targetRegion && (targetRegion === 'EUD' || targetRegion === 'IPD') && targetRegion !== region) {
+      setRegion(targetRegion);
+    }
+
+    setSelectedCountry(resolved);
+    setIsCardCollapsed(false);
+  };
 
   return (
     <div className={styles.container}>
@@ -92,7 +115,7 @@ export default function Dashboard() {
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(11, 13, 23, 0.85)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
           <h1 className="title" style={{ fontSize: '48px', marginBottom: '20px' }}>Canada Macro Trade</h1>
           <p style={{ fontSize: '18px', maxWidth: '600px', textAlign: 'center', color: '#ccc', lineHeight: 1.6, marginBottom: '40px' }}>
-            Welcome to the interactive visualization of Canada's global export dynamics. Use the timeline scrubber to explore macroeconomic trade shifts across the European and Indo-Pacific markets.
+            Welcome to the interactive visualization of Canada&apos;s global export dynamics. Use the timeline scrubber to explore macroeconomic trade shifts across the European and Indo-Pacific markets.
           </p>
           <button 
             style={{ background: '#F03A47', color: 'white', border: 'none', padding: '16px 32px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
@@ -105,7 +128,12 @@ export default function Dashboard() {
 
       {/* 3D Globe Background */}
       <div className={`${activeMobileView === 'sankey' ? styles.hideOnMobile : ''}`}>
-        <GlobeViz region={region} onCountryClick={setSelectedCountry} countryMetrics={allCountryMetrics} />
+        <GlobeViz 
+          region={region} 
+          onCountryClick={handleSelectCountry} 
+          countryMetrics={allCountryMetrics} 
+          selectedCountry={selectedCountry}
+        />
       </div>
 
       {/* Header Chart & HUD */}
@@ -143,22 +171,22 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Timeline Slider */}
+      {/* Dynamic Timeline Slider */}
       <div className={`${styles.timeline} ${styles.glassPanel}`}>
         <div className={styles.timelineRow} style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px', fontSize: '14px', color: '#aaa', marginBottom: '8px' }}>
-          {[2021, 2022, 2023, 2024, 2025, 2026].map(y => (
+          {availableYears.map(y => (
             <span key={y} style={{ color: year === y ? '#F03A47' : '#aaa', fontWeight: year === y ? 'bold' : 'normal' }}>{y}</span>
           ))}
         </div>
         <input 
           type="range" 
-          min="2021" 
-          max="2026" 
+          min={minYear} 
+          max={maxYear} 
           step="1" 
           value={year} 
-          onChange={(e) => setYear(parseInt(e.target.value))}
-          onMouseUp={(e) => setFetchYear(parseInt((e.target as HTMLInputElement).value))}
-          onTouchEnd={(e) => setFetchYear(parseInt((e.target as HTMLInputElement).value))}
+          onChange={(e) => setYear(parseInt(e.target.value, 10))}
+          onMouseUp={(e) => setFetchYear(parseInt((e.target as HTMLInputElement).value, 10))}
+          onTouchEnd={(e) => setFetchYear(parseInt((e.target as HTMLInputElement).value, 10))}
           className={styles.timelineInput}
         />
       </div>
@@ -173,7 +201,7 @@ export default function Dashboard() {
           </p>
           <p className={styles.macroValue} style={{ fontSize: '24px', color: '#00b4ff', marginTop: '12px' }}>
             ${(macroValue / 1000000000).toFixed(2)}B
-            <span style={{ fontSize: '12px', color: '#aaa', fontWeight: 'normal', display: 'block', textTransform: 'uppercase', marginTop: '2px' }}>{region === 'EUD' ? 'European' : 'Indo-Pacific'} Target Market</span>
+            <span style={{ fontSize: '12px', color: '#aaa', fontWeight: 'normal', display: 'block', textTransform: 'uppercase', marginTop: '2px' }}>{currentRegionConfig.marketName}</span>
           </p>
         </div>
       </div>
@@ -255,8 +283,8 @@ export default function Dashboard() {
                     </>
                   )}
                   {!countryData && (
-                    <div style={{ color: '#aaa', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>
-                      Loading metrics...
+                    <div style={{ color: '#00b4ff', fontSize: '13px', textAlign: 'center', padding: '24px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ opacity: 0.8 }}>Navigating map to {selectedCountry}...</span>
                     </div>
                   )}
                 </>
@@ -268,31 +296,36 @@ export default function Dashboard() {
 
       {/* Sankey Diagram (Bottom Right) */}
       <div className={`${styles.sankeyContainer} ${styles.glassPanel} ${activeMobileView === 'sankey' ? styles.sankeyMobileVisible : styles.hideOnMobile}`}>
-        <SankeyViz countryMetrics={allCountryMetrics} region={region} />
+        <SankeyViz 
+          countryMetrics={allCountryMetrics} 
+          region={region} 
+          selectedCountry={selectedCountry}
+          onSelectCountry={handleSelectCountry}
+        />
       </div>
 
       {/* Bottom Title Bar */}
       <div className={`${styles.bottomBar} ${styles.glassPanel}`}>
         <div className={styles.bottomBarText}>
-          <h3 className={`title ${styles.mainTitle}`}>Canada Global Export Dynamics - {region === 'EUD' ? 'European' : 'Indo Pacific'}</h3>
+          <h3 className={`title ${styles.mainTitle}`}>{currentRegionConfig.fullTitle}</h3>
           <p className={styles.explainerText}>
-            This is an overview of the current and recent historic trade market as Canada pushes into the {region === 'EUD' ? 'European Union and surrounding allied nations' : 'dynamic, high-growth Indo-Pacific basin'}.
+            {currentRegionConfig.description}
           </p>
         </div>
         <div className={styles.bottomControls}>
           <div className={styles.regionToggle}>
-            <button 
-              className={`${styles.toggleBtn} ${region === 'EUD' ? styles.active : ''}`}
-              onClick={() => setRegion('EUD')}
-            >
-              European
-            </button>
-            <button 
-              className={`${styles.toggleBtn} ${region === 'IPD' ? styles.active : ''}`}
-              onClick={() => setRegion('IPD')}
-            >
-              Indo-Pacific
-            </button>
+            {Object.entries(REGION_CONFIGS)
+              .filter(([code]) => code !== 'NAFTA')
+              .map(([code, cfg]) => (
+                <button 
+                  key={code}
+                  className={`${styles.toggleBtn} ${region === code ? styles.active : ''}`}
+                  onClick={() => setRegion(code)}
+                >
+                  {cfg.label}
+                </button>
+              ))}
+
           </div>
           
           <div className={styles.mobileViewToggleInline}>
@@ -311,6 +344,23 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Trade Intelligence Brief — floating bottom-left */}
+      <button 
+        className={`${styles.digestFloatingBtn}`}
+        onClick={() => setShowDigest(true)}
+        title="Open Weekly Trade Intelligence Briefing"
+      >
+        <Sparkles size={14} />
+        Trade Intelligence
+      </button>
+
+      {/* Weekly Trade Intelligence Modal */}
+      <ExpertDigestCard 
+        isOpen={showDigest}
+        onClose={() => setShowDigest(false)}
+        onSelectCountry={handleSelectCountry}
+      />
     </div>
   );
 }

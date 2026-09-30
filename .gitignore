@@ -19,6 +19,8 @@
 # Local environment & secrets
 .env*.local
 .env
+.dev.vars
+*.vars
 
 # Heavy databases & raw ledger files (>100MB)
 *.db

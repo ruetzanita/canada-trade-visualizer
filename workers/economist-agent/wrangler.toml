@@ -1,0 +1,16 @@
+name = "trade-economist-agent"
+main = "src/index.ts"
+compatibility_date = "2024-04-05"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = ["0 20 * * 1"] # Every Sunday at 20:00 UTC (4:00 PM EDT) (Cloudflare 1=Sun..7=Sat)
+
+[[d1_databases]]
+binding = "DB"
+database_name = "trade-dashboard-db"
+database_id = "bf1287e9-f76d-4150-b283-10755a0e882c"
+
+[vars]
+DEFAULT_MODEL = "gemini-3.8-flash"
+DEEP_RESEARCH_MODEL = "deep-research-pro-preview-12-2025"
