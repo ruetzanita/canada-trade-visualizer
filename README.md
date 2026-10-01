@@ -1,5 +1,3 @@
-# canada-trade-visualizer
-An interactive 3D geospatial dashboard visualizing Canada's macroeconomic trade relationships across the globe.
 # 🍁 Canada Trade Visualizer
 
 An interactive, premium 3D geospatial dashboard visualizing Canada's macroeconomic trade relationships across the globe. Built with Next.js, Cloudflare Pages, and Cloudflare D1, it highlights export volumes, year-over-year trends, and qualitative trade contexts.
