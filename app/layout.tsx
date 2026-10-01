@@ -17,13 +17,43 @@ const merriweather = Merriweather({
 });
 
 export const metadata = {
+  metadataBase: new URL('https://trade.ruetzanita.com'),
   title: 'Canada Macro Trade Dynamics',
-  description: "Interactive visualization of Canada's global export dynamics in EUD and IPD markets.",
+  description: "Interactive visualization of Canada's global export dynamics in European (EUD) and Indo-Pacific (IPD) markets.",
+  keywords: ['Canada Trade', 'Macroeconomics', 'CIMT', 'CETA', 'CPTPP', 'Global Exports', 'Interactive Trade Visualization'],
+  authors: [{ name: 'Canada Trade Visualizer' }],
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.ico',
     apple: '/favicon.svg',
   },
+  openGraph: {
+    title: 'Canada Macro Trade Dynamics',
+    description: "Interactive visualization of Canada's global export dynamics in European (EUD) and Indo-Pacific (IPD) markets.",
+    url: 'https://trade.ruetzanita.com',
+    siteName: 'Canada Macro Trade Dynamics',
+    locale: 'en_CA',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Canada Macro Trade Dynamics',
+    description: "Interactive visualization of Canada's global export dynamics in European (EUD) and Indo-Pacific (IPD) markets.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Canada Macro Trade Dynamics',
+  url: 'https://trade.ruetzanita.com',
+  description: "Interactive visualization of Canada's global export dynamics in European and Indo-Pacific markets.",
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'All',
 };
 
 export default function RootLayout({
@@ -33,7 +63,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${merriweather.variable}`}>
-      <body>{children}</body>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
+      <body>
+        <main id="main-content">
+          {children}
+        </main>
+      </body>
     </html>
   );
 }

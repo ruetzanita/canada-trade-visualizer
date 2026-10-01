@@ -21,6 +21,13 @@
 .env
 .dev.vars
 *.vars
+local/
+/local/
+
+# Developer-only confidential specs & internal notes
+**USER_ONLY**/
+build_notes/
+.api_backup/
 
 # Heavy databases & raw ledger files (>100MB)
 *.db
@@ -28,5 +35,6 @@
 db/unified_master.db
 raw_data/
 scratch/
+
 
 

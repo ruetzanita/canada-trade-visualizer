@@ -88,7 +88,7 @@ The platform incorporates an autonomous two-tier AI Economist pipeline deployed 
 To ensure long-term codebase hygiene and prevent file fragmentation, all developers and AI agents must comply with these file placement rules:
 
 1. **Root Directory Policy**:
-   - Only primary project configuration (`package.json`, `tsconfig.json`, `wrangler.toml`, `next.config.mjs`, `.gitignore`), primary metadata (`README.md`, `LICENSE.md`, `changelog.md`), and TypeScript definitions (`next-env.d.ts`, `global.d.ts`) may reside in the workspace root.
+   - Only primary project configuration (`package.json`, `tsconfig.json`, `wrangler.toml`, `next.config.mjs`, `.gitignore`), primary metadata (`README.md`, `LICENSE.md`, `CHANGELOG.md`), and TypeScript definitions (`next-env.d.ts`, `global.d.ts`) may reside in the workspace root.
    - Do NOT save technical specs, test outputs, raw datasets, or database files in root.
 
 2. **Subdirectory Roles**:
@@ -97,9 +97,9 @@ To ensure long-term codebase hygiene and prevent file fragmentation, all develop
    - `functions/`: Cloudflare Pages Functions edge API endpoints (`functions/api/`).
    - `db/`: SQLite database files (`unified_master.db`, `production.db`), SQL patches, and static JSON/TS datasets.
    - `scripts/`: Data ingestion, database build, and maintenance scripts.
-   - `scratch/`: Experimental scripts, developer scratchpads, and temporary test files.
+   - `scratch/`: Experimental scripts, developer scratchpads, and temporary test files (git-ignored).
    - `reference/`: Strategic explainer guides, cover images, and design reference assets.
-   - `archive/`: Legacy scripts.
+   - `local/`: Local confidential storage for auth keys, SSH credentials, private developer notes, and scratch pads (strictly git-ignored).
 
 3. **Database Integrity**:
    - Master data operations target `db/unified_master.db`.

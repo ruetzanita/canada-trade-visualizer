@@ -173,8 +173,11 @@ export default {
 
     if (url.pathname === '/run' && request.method === 'POST') {
       const authHeader = request.headers.get('Authorization');
-      if (env.ADMIN_TOKEN && authHeader !== `Bearer ${env.ADMIN_TOKEN}`) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+      if (!env.ADMIN_TOKEN || authHeader !== `Bearer ${env.ADMIN_TOKEN}`) {
+        return new Response(JSON.stringify({ error: 'Unauthorized: Valid ADMIN_TOKEN Bearer authorization is required.' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        });
       }
 
       try {

@@ -32,8 +32,15 @@ export default function Dashboard() {
   const [isCardCollapsed, setIsCardCollapsed] = useState(false);
   const [activeMobileView, setActiveMobileView] = useState<'globe' | 'sankey'>('globe');
   const [showDigest, setShowDigest] = useState(false);
+  const [load3D, setLoad3D] = useState(false);
 
   const currentRegionConfig = getRegionConfig(region);
+
+  // Defer heavy 3D WebGL initialization so initial paint and hydration complete instantly
+  useEffect(() => {
+    const timer = setTimeout(() => setLoad3D(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Fetch API data when fetchYear or region changes
   useEffect(() => {
@@ -153,14 +160,16 @@ export default function Dashboard() {
       )}
 
       {/* 3D Globe Background */}
-      <div className={`${activeMobileView === 'sankey' ? styles.hideOnMobile : ''}`}>
-        <GlobeViz 
-          region={region} 
-          onCountryClick={handleSelectCountry} 
-          countryMetrics={allCountryMetrics} 
-          selectedCountry={selectedCountry}
-        />
-      </div>
+      {load3D && (
+        <div className={`${activeMobileView === 'sankey' ? styles.hideOnMobile : ''}`}>
+          <GlobeViz 
+            region={region} 
+            onCountryClick={handleSelectCountry} 
+            countryMetrics={allCountryMetrics} 
+            selectedCountry={selectedCountry}
+          />
+        </div>
+      )}
 
       {/* Header Chart & HUD */}
       <header className={styles.header}>
@@ -177,12 +186,16 @@ export default function Dashboard() {
 
       {/* Dynamic Timeline Slider */}
       <div className={`${styles.timeline} ${styles.glassPanel}`}>
+        <label htmlFor="timeline-year-scrubber" className="sr-only">
+          Timeline Year Scrubber (2021 to 2026)
+        </label>
         <div className={styles.timelineRow} style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px', fontSize: '14px', color: '#aaa', marginBottom: '8px' }}>
           {availableYears.map(y => (
-            <span key={y} style={{ color: year === y ? '#F03A47' : '#aaa', fontWeight: year === y ? 'bold' : 'normal' }}>{y}</span>
+            <span key={y} style={{ color: year === y ? '#d82937' : '#aaa', fontWeight: year === y ? 'bold' : 'normal' }}>{y}</span>
           ))}
         </div>
         <input 
+          id="timeline-year-scrubber"
           type="range" 
           min={minYear} 
           max={maxYear} 
@@ -215,10 +228,18 @@ export default function Dashboard() {
       {selectedCountry && (
         <div className={`${styles.countryCard} ${styles.glassPanel} ${selectedCountry === 'Canada' ? styles.canadaCard : ''} ${styles['animate-fade-in']} ${activeMobileView === 'sankey' ? styles.hideOnMobile : ''}`}>
           <div className={styles.cardHeaderButtons}>
-            <button className={styles.collapseBtn} onClick={() => setIsCardCollapsed(!isCardCollapsed)}>
+            <button 
+              className={styles.collapseBtn} 
+              onClick={() => setIsCardCollapsed(!isCardCollapsed)}
+              aria-label={isCardCollapsed ? "Expand country details" : "Collapse country details"}
+            >
               {isCardCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
             </button>
-            <button className={styles.closeBtn} onClick={() => setSelectedCountry(null)}>
+            <button 
+              className={styles.closeBtn} 
+              onClick={() => setSelectedCountry(null)}
+              aria-label="Close country details"
+            >
               <X size={20} />
             </button>
           </div>
@@ -355,6 +376,7 @@ export default function Dashboard() {
         className={`${styles.digestFloatingBtn}`}
         onClick={() => setShowDigest(true)}
         title="Open Weekly Trade Intelligence Briefing"
+        aria-label="Open Weekly Trade Intelligence Briefing"
       >
         <Sparkles size={14} />
         Trade Intelligence

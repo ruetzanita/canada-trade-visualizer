@@ -207,14 +207,15 @@
   background: rgba(255, 255, 255, 0.03);
   padding: 16px 20px;
   border-radius: 8px;
-  border-left: 3px solid #F03A47;
+  border-left: 3px solid var(--color-highlight);
 }
 
+.tradeFocus h3,
 .tradeFocus h4 {
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #F03A47;
+  color: #ff5c68;
   margin-bottom: 8px;
   margin-top: 0;
 }
@@ -233,6 +234,7 @@
   border-radius: 8px;
 }
 
+.topImports h3,
 .topImports h4 {
   font-size: 14px;
   text-transform: uppercase;
@@ -337,6 +339,8 @@
 .toggleBtn.active {
   background: var(--color-highlight);
   border-color: var(--color-highlight);
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .toggleBtn:hover:not(.active) {

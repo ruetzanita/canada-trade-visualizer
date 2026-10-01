@@ -1,9 +1,21 @@
 :root {
   --color-bg: #0B0D17;
-  --color-highlight: #F03A47;
+  --color-highlight: #d82937;
   --color-green: #4CAF50;
   --font-sans: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-serif: var(--font-serif), 'Merriweather', Georgia, serif;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 * {

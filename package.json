@@ -7,13 +7,13 @@
     "dev": "node scripts/dev_server.mjs",
     "dev:next": "next dev",
     "dev:pages": "wrangler pages dev --next",
-    "download-assets": "node scratch/download_globe_assets.mjs",
-    "build": "node scratch/cleanup.mjs && next build && node scratch/restore_api.mjs",
-    "build:prod": "node scratch/cleanup.mjs && node scripts/build_production_db.mjs && next build && node scratch/restore_api.mjs",
-    "postbuild": "node scratch/restore_api.mjs",
+    "download-assets": "node scripts/download_globe_assets.mjs",
+    "build": "node scripts/cleanup.mjs && next build && node scripts/restore_api.mjs",
+    "build:prod": "node scripts/cleanup.mjs && node scripts/build_production_db.mjs && next build && node scripts/restore_api.mjs",
+    "postbuild": "node scripts/restore_api.mjs",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types scratch/test_api_logic.mjs && next lint",
+    "test": "node --experimental-strip-types scripts/test_api_logic.mjs && next lint",
     "ingest": "node scripts/ingest_raw_data.mjs"
   },
   "keywords": [],
@@ -36,8 +36,10 @@
     "@types/node": "^25.9.3",
     "@types/react": "^19.2.17",
     "@types/three": "^0.184.1",
+    "axe-core": "^4.13.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "15.5.2",
+    "jsdom": "^30.1.1",
     "typescript": "^6.0.3"
   }
 }
