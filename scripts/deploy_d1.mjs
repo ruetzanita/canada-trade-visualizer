@@ -68,25 +68,38 @@ function checkWrangler() {
 
 function verifyRemoteD1() {
   console.log(`\n🔍 Verifying latest state in Cloudflare D1 (${DB_BINDING_NAME})...`);
-  const queryCmd = `npx --yes wrangler d1 execute ${DB_BINDING_NAME} --remote --command="SELECT id, edition_date, headline FROM weekly_digests ORDER BY id DESC LIMIT 3;" --json`;
+  const digestQueryCmd = `npx --yes wrangler d1 execute ${DB_BINDING_NAME} --remote --command="SELECT id, edition_date, headline FROM weekly_digests ORDER BY id DESC LIMIT 3;" --json`;
+  const macroQueryCmd = `npx --yes wrangler d1 execute ${DB_BINDING_NAME} --remote --command="SELECT MIN(report_month) as min_m, MAX(report_month) as max_m, COUNT(*) as cnt FROM macro_monthly_summary;" --json`;
   
   try {
-    const output = execSync(queryCmd, {
+    const digestOutput = execSync(digestQueryCmd, {
       cwd: rootDir,
       encoding: 'utf8',
       env: process.env,
       stdio: ['pipe', 'pipe', 'pipe']
     });
 
-    const parsed = JSON.parse(output);
-    const results = parsed?.[0]?.results || [];
-    if (results.length > 0) {
+    const parsedDigest = JSON.parse(digestOutput);
+    const digestResults = parsedDigest?.[0]?.results || [];
+    if (digestResults.length > 0) {
       console.log('📊 Active remote editions in D1:');
-      for (const row of results) {
+      for (const row of digestResults) {
         console.log(`   • [${row.id}] (${row.edition_date}): ${row.headline}`);
       }
     } else {
       console.log('ℹ️ No weekly digests found in remote D1.');
+    }
+
+    const macroOutput = execSync(macroQueryCmd, {
+      cwd: rootDir,
+      encoding: 'utf8',
+      env: process.env,
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    const parsedMacro = JSON.parse(macroOutput);
+    const macroRow = parsedMacro?.[0]?.results?.[0];
+    if (macroRow) {
+      console.log(`📈 Quantitative Macro Summaries: min_month=${macroRow.min_m}, max_month=${macroRow.max_m}, total_records=${macroRow.cnt}`);
     }
   } catch (err) {
     console.warn(`⚠️ Could not query remote D1 verification: ${err.message}`);
