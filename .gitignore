@@ -32,7 +32,9 @@ build_notes/
 # Heavy databases & raw ledger files (>100MB)
 *.db
 !db/production.db
-db/unified_master.db
+*.db-wal
+*.db-shm
+db/unified_master.db*
 raw_data/
 scratch/
 
