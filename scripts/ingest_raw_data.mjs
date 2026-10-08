@@ -83,32 +83,96 @@ function processFile(filePath) {
     });
 }
 
-async function walkDir(dir, targetYear) {
-    const files = fs.readdirSync(dir);
-    for (const file of files) {
-        const fullPath = path.join(dir, file);
-        const stat = fs.statSync(fullPath);
-        if (stat.isDirectory()) {
-            if (!targetYear || file.includes(String(targetYear))) {
-                await walkDir(fullPath, targetYear);
-            }
-        } else if (file.startsWith('ODPFN016') && file.endsWith('.csv')) {
-            // Only ingest ODPFN016 (HS8 detailed commodity exports) to avoid triple-counting
-            if (!targetYear || file.includes(String(targetYear))) {
-                console.log(`Processing ${fullPath}...`);
-                await processFile(fullPath);
+function ensureCommodityDescriptions() {
+    const descPath = path.join(rawDataDir, 'CIMT-CICM_Dom_Exp_2026', 'CIMT-CICM_Dom_Exp_2026', 'ODPF_2_HS8Desc.TXT');
+    if (!fs.existsSync(descPath)) return;
+    
+    console.log("Checking and syncing HS8 commodity descriptions from ODPF_2_HS8Desc.TXT...");
+    const content = fs.readFileSync(descPath, 'latin1');
+    const lines = content.split('\n');
+    
+    const insertCommodity = db.prepare(`
+        INSERT OR IGNORE INTO commodities (commodity_code, commodity_name)
+        VALUES (?, ?)
+    `);
+    
+    const insertMany = db.transaction((items) => {
+        for (const item of items) {
+            insertCommodity.run(item.code, item.name);
+        }
+    });
+
+    const items = [];
+    for (const line of lines) {
+        if (!line || line.length < 35) continue;
+        const code = line.slice(0, 8).trim();
+        const rawDesc = line.slice(29, 105).trim();
+        if (code && rawDesc) {
+            items.push({ code, name: rawDesc });
+        }
+    }
+    
+    insertMany(items);
+    console.log(`Synced ${items.length.toLocaleString()} HS8 descriptions into commodities table.`);
+}
+
+function findLatestOdpfnFiles(dir, targetYear) {
+    const allFiles = [];
+    function scan(d) {
+        const entries = fs.readdirSync(d);
+        for (const entry of entries) {
+            const fullPath = path.join(d, entry);
+            const stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+                scan(fullPath);
+            } else {
+                const match = entry.match(/^ODPFN016_(\d{4})(\d{2})N\.csv$/);
+                if (match) {
+                    allFiles.push({
+                        filePath: fullPath,
+                        fileName: entry,
+                        year: match[1],
+                        month: match[2],
+                        yearMonth: `${match[1]}${match[2]}`
+                    });
+                }
             }
         }
     }
+    scan(dir);
+
+    // Group by year and pick the highest month (latest cumulative release)
+    const byYear = new Map();
+    for (const f of allFiles) {
+        if (!byYear.has(f.year) || f.month > byYear.get(f.year).month) {
+            byYear.set(f.year, f);
+        }
+    }
+
+    // Warn about any superseded files
+    for (const f of allFiles) {
+        const latest = byYear.get(f.year);
+        if (latest && f.filePath !== latest.filePath) {
+            console.log(`⚠️  Skipping superseded release: ${f.fileName} (superseded by ${latest.fileName})`);
+        }
+    }
+
+    let selected = Array.from(byYear.values()).sort((a, b) => a.year.localeCompare(b.year));
+    if (targetYear) {
+        selected = selected.filter(f => f.year === String(targetYear));
+    }
+    return selected;
 }
 
 async function main() {
     const args = process.argv.slice(2);
     const yearArg = args.find(a => a.startsWith('--year='));
-    const isAll = args.includes('--all') || (!yearArg && !args.includes('--year=2026'));
+    const isAll = args.includes('--all');
     const targetYear = yearArg ? yearArg.split('=')[1] : (isAll ? null : '2026');
 
     console.log(`Starting ingestion${targetYear ? ` for year ${targetYear}` : ' for ALL years (2021-2026)'}...`);
+
+    ensureCommodityDescriptions();
 
     if (!targetYear) {
         console.log("Dropping secondary indexes on raw_trade_data for high-speed bulk ingestion...");
@@ -124,7 +188,16 @@ async function main() {
         db.prepare(`DELETE FROM macro_monthly_summary WHERE report_month LIKE '${targetYear}%'`).run();
     }
 
-    await walkDir(rawDataDir, targetYear);
+    const filesToProcess = findLatestOdpfnFiles(rawDataDir, targetYear);
+    console.log(`Discovered ${filesToProcess.length} dataset(s) to process:`);
+    for (const file of filesToProcess) {
+        console.log(` - [${file.year}] ${file.fileName} (${file.filePath})`);
+    }
+
+    for (const file of filesToProcess) {
+        console.log(`\nProcessing ${file.filePath}...`);
+        await processFile(file.filePath);
+    }
 
     if (!targetYear) {
         console.log("Rebuilding indexes on raw_trade_data...");

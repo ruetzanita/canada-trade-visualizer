@@ -1,0 +1,99 @@
+name: Weekly Trade Intelligence Publication & Deployment
+
+on:
+  schedule:
+    # Run every Sunday at 20:00 UTC (4:00 PM EDT / 1:00 PM PDT)
+    - cron: '0 20 * * 0'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Execution & Deployment Mode'
+        type: choice
+        required: true
+        default: 'full'
+        options:
+          - 'full'
+          - 'compile_and_deploy'
+          - 'deploy_only'
+          - 'full_db_sync'
+      force_flash:
+        description: 'Force Gemini 3.8 Flash fallback (bypass 4-minute Deep Research)'
+        type: boolean
+        default: false
+        required: false
+
+# Prevent concurrent publication runs
+concurrency:
+  group: trade-intelligence-publication
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish-and-deploy:
+    name: Execute Publication & D1 Deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Ensure SQLite3 CLI
+        run: |
+          which sqlite3 || (sudo apt-get update && sudo apt-get install -y sqlite3)
+
+      # Step 1: Optional AI Economist Generation & Compilation
+      # Only runs if mode is 'full' or 'compile_and_deploy', or on scheduled Sunday trigger
+      - name: Run Autonomous Trade Economist Pipeline
+        if: ${{ github.event_name == 'schedule' || (github.event.inputs.mode != 'deploy_only' && github.event.inputs.mode != 'full_db_sync') }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FORCE_FALLBACK: ${{ github.event.inputs.force_flash == 'true' && 'true' || 'false' }}
+          COMPILE_ONLY: ${{ github.event.inputs.mode == 'compile_and_deploy' && 'true' || 'false' }}
+        run: node scripts/run_economist_dry_run.mjs
+
+      # Step 2: Cloudflare D1 Remote Deployment (Automated or Manual)
+      - name: Sync Cloudflare D1 Database
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ "${{ github.event.inputs.mode }}" = "full_db_sync" ]; then
+            echo "Deploying full database dump to Cloudflare D1..."
+            node scripts/deploy_d1.mjs --full
+          else
+            echo "Deploying latest week SQL patch to Cloudflare D1..."
+            node scripts/deploy_d1.mjs
+          fi
+
+      # Step 3: Commit & Push Publication Artifacts to main
+      # (Pushes new SQLite database, patch, and markdown archives; triggers Cloudflare Pages deploy)
+      - name: Commit & Push Publication Artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add db/production.db db/production.sql docs/LATEST_RESEARCH_PUBLICATION.md
+          if [ -f "db/latest_week_patch.sql" ]; then
+            git add db/latest_week_patch.sql
+          fi
+
+          if git diff --staged --quiet; then
+            echo "No database or research changes to commit."
+          else
+            git commit -m "chore(briefing): publish Trade Intelligence briefing [skip ci]"
+            git push origin main
+            echo "Successfully pushed latest briefing publication to origin/main."
+          fi

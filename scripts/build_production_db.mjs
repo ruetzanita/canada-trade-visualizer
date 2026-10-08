@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
 const sourceDbPath = path.resolve('db/unified_master.db');
 const destDbPath = path.resolve('db/production.db');
@@ -45,6 +46,15 @@ try {
     destDb.exec(`VACUUM;`);
 
     console.log("Successfully created db/production.db");
+
+    // Sync SQLite dump to db/production.sql for Cloudflare D1
+    try {
+        const dumpSql = execSync(`sqlite3 "${destDbPath}" .dump`, { encoding: 'utf8' });
+        fs.writeFileSync(path.resolve('db/production.sql'), dumpSql, 'utf8');
+        console.log(`💾 Synced SQLite dump to: db/production.sql`);
+    } catch (dumpErr) {
+        console.warn(`⚠️ Could not auto-sync production.sql: ${dumpErr.message}`);
+    }
 } catch (err) {
     console.error("Failed to build production database:", err);
 } finally {

@@ -54,7 +54,12 @@ async function runEconomistPipeline(env: Env): Promise<{ success: boolean; diges
   const researchBrief = await gemini.generateResearchBrief(deepResearchPrompt, ECONOMIST_SYSTEM_PROMPT);
 
   // 3. Tier 2: Compile Brief into Structured Database Records
-  const compilerPrompt = buildCompilerPrompt(researchBrief, currentYear);
+  const startOfYear = new Date(currentYear, 0, 1);
+  const weekNum = Math.ceil((((now.getTime() - startOfYear.getTime()) / 86400000) + startOfYear.getDay() + 1) / 7);
+  const editionId = `${currentYear}-W${String(weekNum).padStart(2, '0')}`;
+  const editionDate = now.toISOString().split('T')[0];
+
+  const compilerPrompt = buildCompilerPrompt(researchBrief, currentYear, editionId, editionDate);
   const structuredData = await gemini.compileStructuredOutput(compilerPrompt, ECONOMIST_SYSTEM_PROMPT);
 
   const digest = structuredData.weekly_digest;

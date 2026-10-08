@@ -72,16 +72,31 @@ This automatically compiles `db/production.db` via `scripts/build_production_db.
 
 ## Autonomous Trade Intelligence Pipeline
 
-The platform incorporates an autonomous two-tier AI Economist pipeline deployed as a scheduled Cloudflare Worker (`workers/economist-agent`):
+The platform runs an autonomous two-tier AI Economist pipeline orchestrated via a scheduled GitHub Actions workflow ([`.github/workflows/trade_intelligence_publication.yml`](../.github/workflows/trade_intelligence_publication.yml)):
 
-- **Execution Cadence:** Every Sunday at 20:00 UTC via Cloudflare Cron (`0 20 * * 0`).
-- **Tier 1 (Chief Investigative Economist):** Executes `deep-research-pro-preview-12-2025` via Google's asynchronous Interactions API, conducting a comprehensive sweep across whitelisted watchdogs (Global Affairs Canada, Global Trade Alert, Hinrich Foundation, WTO) using the **Four-Pillar Macroeconomic Architecture** (*Sovereign Moves $\rightarrow$ Strategic Wins $\rightarrow$ Macro Hurdles $\rightarrow$ Panoramic Synthesis*).
-- **Tier 2 (Desk Compiler):** Compiles the research brief into structured records via `gemini-3.8-flash` (JSON schema mode), updating the public `weekly_digests` table and applying selective $\le 20$-word timestamped updates to affected `country_context` profiles in Cloudflare D1.
-- **Offline Dry Run & Local Verification:**
+- **Execution Cadence:** Every Sunday at 20:00 UTC (4:00 PM EDT / 1:00 PM PDT) via GitHub Actions schedule (`0 20 * * 0`), with manual one-click dispatch available in the GitHub Actions tab.
+- **Tier 1 (Regional Sweeps & Editorial Feature):** Executes parallel deep sweeps across whitelisted watchdogs (Global Affairs Canada, Global Trade Alert, Hinrich Foundation, WTO) for the Indo-Pacific (IPD) and European Union (EUD) using `gemini-3.8-flash` with Google Search Grounding, followed by a grounded lead editorial monograph.
+- **Tier 2 (Desk Compiler):** Compiles the verified briefs into structured records via `gemini-3.8-flash` (JSON schema mode), updating the public `weekly_digests` table and applying selective $\le 20$-word timestamped updates to affected `country_context` profiles.
+- **Dual-Tier Edge & Repository Sync:** Generates `db/latest_week_patch.sql` to synchronize Cloudflare D1 (`trade-dashboard-db`), dumps `db/production.sql`, commits `docs/LATEST_RESEARCH_PUBLICATION.md` to Git, and pushes to `main` (triggering automatic Cloudflare Pages deployment).
+- **Deployment & Backup Options:**
+  1. **Automated Scheduled Deployment:** Runs every Sunday via [`.github/workflows/trade_intelligence_publication.yml`](../.github/workflows/trade_intelligence_publication.yml).
+  2. **GitHub Actions Manual Backup Dispatch:**
+     - `full`: Complete autonomous research + compile + deploy to D1.
+     - `compile_and_deploy`: Re-compiles existing `docs/LATEST_RESEARCH_PUBLICATION.md` and deploys to D1.
+     - `deploy_only`: Zero AI calls. Directly executes `db/latest_week_patch.sql` against Cloudflare D1.
+     - `full_db_sync`: Directly deploys `db/production.sql` to Cloudflare D1.
+  3. **Local Manual Deployment CLI:**
+     ```bash
+     npm run deploy:d1           # Deploys db/latest_week_patch.sql to remote D1
+     npm run deploy:d1:full      # Deploys db/production.sql to remote D1
+     npm run deploy:d1:verify    # Inspects active editions in remote D1
+     ```
+- **Local Research Dry Run & Manual Verification:**
   ```bash
   node scripts/run_economist_dry_run.mjs
+  node scripts/run_economist_dry_run.mjs --compile-only   # Fast compile of existing brief
+  node scripts/run_economist_dry_run.mjs --flash          # Fast test using Gemini Flash
   ```
-  Runs the full two-tier pipeline against live Google AI APIs and saves the resulting 5-section markdown dossier to `docs/LATEST_RESEARCH_PUBLICATION.md`.
 
 ## Developer Guidelines & Directory Rules
 

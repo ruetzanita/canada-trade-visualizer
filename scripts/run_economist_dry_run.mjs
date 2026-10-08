@@ -1,9 +1,12 @@
 // scripts/run_economist_dry_run.mjs
-// Live dry-run runner for the Autonomous Export Economist pipeline
+// Decomposed, multi-stage live runner for the Autonomous Export Economist pipeline
+// Enforces Canadian perspective, senior investigative trade journalism standard, and zero truncation.
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,127 +24,190 @@ if (!API_KEY) {
 }
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const DEEP_RESEARCH_MODEL = 'deep-research-pro-preview-12-2025';
 
-const LISTED_COUNTRIES = [
+export const EUD_COUNTRIES = [
   'Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czechia', 'Denmark', 'Estonia',
   'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Iceland', 'Ireland', 'Italy',
   'Latvia', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Malta', 'Netherlands', 'Norway',
   'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia', 'Spain', 'Sweden',
-  'Switzerland', 'Ukraine', 'United Kingdom',
+  'Switzerland', 'Ukraine', 'United Kingdom'
+];
+
+export const IPD_COUNTRIES = [
   'Australia', 'Bangladesh', 'Brunei', 'China', 'Hong Kong', 'India', 'Indonesia',
   'Japan', 'Malaysia', 'New Zealand', 'Philippines', 'Singapore', 'South Korea',
   'Taiwan', 'Thailand', 'Vietnam', 'Brazil', 'Chile', 'Peru',
-  'Rest of South America', 'Mexico',
+  'Rest of South America', 'Mexico'
+];
+
+export const LISTED_COUNTRIES = [
+  ...EUD_COUNTRIES,
+  ...IPD_COUNTRIES,
   'United States', 'Canada'
 ];
 
-const ECONOMIST_SYSTEM_PROMPT = `
-You are the Senior Canadian Export Economist & Chief Global Strategist for the "Canada Trade Visualizer" platform.
-Your mandate is to provide authoritative, panoramic macroeconomic intelligence on Canada's global trade posture, industrial statecraft, and economic diversification.
+export const TRADE_REPORTER_SYSTEM_PROMPT = `
+You are a senior Canadian investigative business and trade reporter specializing in international commerce, supply chains, and sovereign economic policy.
+Your mandate is to provide sharp, muscular, skeptical Canadian economic intelligence on Canada’s commercial trade diversification beyond North America.
 
-CORE PHILOSOPHY & ANALYTICAL ARCHITECTURE:
-1. Canada as Sovereign Protagonist: Analyze global trade from the vantage point of Canadian economic statecraft. The narrative focuses on what Canada is proactively doing in the world—forging alliances, executing trade architecture, and expanding commercial corridors across her two designated Target Markets:
-   - Indo-Pacific (IPD)
-   - European Union & EFTA (EUD)
-2. The Four-Pillar Strategic Framework:
-   - Proactive Moves: Where is Canada positioning her capital, trade missions, diplomatic weight, and trade agreements?
-   - Strategic Wins: Tangible market access breakthroughs, tariff eliminations, investment corridors, and competitive advantages being secured.
-   - Macro Hurdles: Real structural challenges—domestic logistics and port chokepoints, regulatory compliance barriers abroad (e.g., EU CBAM, ESG standards), and shifting geopolitical crosswinds.
-   - Panoramic Synthesis: How these moving parts connect on a macro level to impact Canadian economic resilience, productivity, and the prosperity of everyday Canadians.
-3. Panoramic Macro View (Avoid Microcosms): Focus on the macroeconomic landscape—capital formation, trade treaty utilization, industrial strategy, sovereign economic security, and currency realities—rather than narrow, micro-level commodity tracking.
-4. Balanced Global Baseline: Avoid sensationalist or headline-chasing commentary. Treat continental North American trade as a steady baseline, while training the spotlight on Canada's sovereign expansion into Europe and the Indo-Pacific.
-5. "Investigative Journalism UX": Every trade pact, policy change, or supply chain development MUST include a specific Month/Year date (e.g., "Sep 2026: ...") so users can scrub the master timeline slider to verify monetary outcomes.
-6. Strict Scope Adherence: You must ONLY reference the 57 listed countries. Never generate analysis for non-whitelisted countries. Group Argentina, Bolivia, Colombia, Ecuador, Paraguay, Uruguay, and Venezuela under "Rest of South America".
-7. Grounded in Whitelisted Sources: Rely exclusively on verified data from Global Affairs Canada, Statistics Canada, Export Development Canada, Global Trade Alert (globaltradealert.org), Hinrich Foundation (hinrichfoundation.com), and the WTO. Reject all unsourced rumors and speculative blogs.
-8. Strict UI Spatial Constraints (Country Cards are fixed at 350px width):
+CORE EDITORIAL RULES & THE CANADIAN PERSPECTIVE:
+1. Canada is the Protagonist: Trade flows and policy are analyzed from the vantage point of the Canadian corporate ledger, provincial resource economics, and federal policy execution. This is a Canadian project about Canadian sovereignty and market diversification.
+2. The 75% Baseline: Acknowledge that continental North American trade (~75% of exports) is Canada's existing volume baseline. The story is what Canada is doing to develop the remaining 25%—active diversification into the Indo-Pacific (IPD) and European Union (EUD).
+3. Grounded in Canadian Machinery: Ground stories in Canadian institutions and logistics: Export Development Canada (EDC), the Trade Commissioner Service (TCS), Bank of Canada rate divergences, Transport Canada, port dwell times at Vancouver/Prince Rupert/Montreal/Halifax, and CN/CPKC rail networks.
+4. Hard-Nosed Journalistic Skepticism: No cheerleading or government press-release fluff. Examine real friction: dockworker strikes, demurrage costs, EU CBAM carbon border penalties on Canadian metals, European agricultural non-tariff barriers under CETA, shipping rate spikes, and counterparty risks.
+5. STRICT BANNED CLICHÉS (NEVER USE THESE WORDS OR PATTERNS):
+   - "sovereign statecraft", "sovereign protagonist", "panoramic synthesis", "macroeconomic mosaic", "deliberate transition", "vanguard", "catalyst", "testament", "tapestry", "pivotal", "synergies", "multi-vector", "from coast to coast".
+   - Never open with: "As the [quarter/month] unfolds...", "Against the backdrop of...", "In an increasingly volatile world...", or "Canada's trade architecture is undergoing...".
+6. The Inverted Pyramid Lead: The opening paragraph must start like a hard news lead—naming a concrete event, a specific dollar figure, a port volume shift, or a trade dispute that occurred this week.
+7. Verification & Dates: Every development must reference an explicit Month/Year (e.g., "Oct 2026: ...") and verifiable Canadian trade data.
+8. No ASCII Art: Never output ASCII box drawings, pseudo-charts, or text wireframes. Use clean Markdown tables and subheadings.
+9. Strict UI Spatial Constraints (Country Cards are fixed at 350px width):
    - deals_and_disruptions entry: Max 20 words per year bullet. Must contain Month/Year timestamp.
    - trade_stance: 1-2 tight, punchy sentences.
 `;
 
-function buildDeepResearchPrompt(currentYear, recentD1MetricsSummary) {
+function buildIPDResearchPrompt(currentYear, quantitativeSummary) {
   return `
-Conduct an exhaustive macroeconomic trade investigation for the past 7 days concerning Canada's trade diversification posture across its 57 tracked partner nations in the European Union (EUD) and Indo-Pacific (IPD) basins.
+Conduct an investigative fact-gathering sweep of Canadian commercial trade, logistics, and bilateral policy developments in the INDO-PACIFIC (IPD) basin over the past 7 to 30 days.
 
-INTELLECTUAL MANDATE & NARRATIVE ARCHITECTURE:
-- View Canada as an active sovereign global economic actor navigating a shifting world order.
-- Demote US trade friction to existing baseline context; spotlight Canadian proactive commercial expansion into Europe and Asia.
-- Ground analysis in verifiable data from Global Affairs Canada, Global Trade Alert, Hinrich Foundation, WTO, and Statistics Canada.
+Target Region (IPD - 21 economies):
+${JSON.stringify(IPD_COUNTRIES)}
 
-Context of Current Canadian Trade Volume:
-${recentD1MetricsSummary}
+Recent Trade Volumes for Context (from Statistics Canada):
+${quantitativeSummary}
 
-Produce a structured, publication-grade 5-section macroeconomic research dossier:
+Key Focus Corridors & Sectors:
+1. West Coast Maritime Gateways: Port of Vancouver, Port of Prince Rupert, CN and CPKC transpacific rail velocity, container dwell times, grain/coal loading terminals.
+2. Critical Minerals & Clean Tech: Lithium, nickel, cobalt, graphite offtake pacts with Japanese, South Korean, and Taiwanese industrial conglomerates; METI/MOTIE subsidies.
+3. Agrifood & Bulk Commodities: Prairie wheat, canola seed, yellow peas/pulses (India tariff exemptions/tariffs), potash shipments via Canpotex to Southeast Asia (Indonesia, Malaysia, Vietnam).
+4. Bilateral Treaties & Tariffs: CPTPP implementation, Canada-Indonesia CEPA progress, foreign investment protection agreements (FIPA).
 
-# SECTION 1: THE LEAD EDITORIAL SUMMARY (TRADE INTELLIGENCE BRIEF)
-- Form: A publication-grade macroeconomic policy monograph (in the authoritative voice of Foreign Affairs, The Economist, or the C.D. Howe Institute).
-- Target Length: Strictly 1,600 to 2,200 words. Do NOT summarize or truncate prematurely.
-- Intellectual Focus: Canada as Sovereign Protagonist forging commercial corridors in Europe and the Indo-Pacific.
+REQUIRED OUTPUT FORMAT (Markdown):
+## 1. Top Indo-Pacific Breaking Events & Policy Interventions
+(List 3-5 verified events from the past 7-30 days with exact dates, commercial entities, tariff schedules, and verifiable source URLs from Global Affairs Canada, Global Trade Alert, Hinrich Foundation, or WTO).
 
-Structure (Must strictly follow this 3-part layout):
-1. Part 1: Sovereign Opening & Strategic Thesis (~250 words)
-   - Establish Canada's weekly macroeconomic posture, strategic positioning, and overarching diversification momentum.
+## 2. West Coast Logistics & Corridor Velocity
+(Specific container dwell times, rail car availability, port congestion, maritime freight rates).
 
-2. Part 2: Thematic Deep Dives (Select the 4 to 6 most consequential themes from the 8-Theme Menu below; ~300–400 words per theme)
-   - Review the 8 Strategic Macro Themes below and select the 4 to 6 themes that experienced the most active, verified developments this week.
-   - For EACH selected theme, provide a clear markdown subheading (e.g. "### I. Sovereign Trade Architecture & Treaty Execution") followed by 2 to 3 substantive, data-rich analytical paragraphs detailing specific trade pacts, bilateral initiatives, logistics realities, and commercial breakthroughs.
+## 3. Country Card Delta Updates (Active IPD Nations Only)
+For each IPD country that experienced a verified, active shift this week (maximum 5-8 countries):
+- **Country Name**: (Must be strictly from IPD list)
+- **Month/Year**: (e.g., Oct ${currentYear})
+- **Bullet Text**: (Strictly ≤ 20 words, must start with "Month Year:", summarizing the exact shift)
+- **Trade Stance**: (1 punchy sentence summarizing current bilateral posture)
+- **Deep Source URL**: (Direct, specific URL—NOT homepages like international.gc.ca)
 
-3. Part 3: Panoramic Synthesis & The Canadian Bottom Line (~250–350 words)
-   - Synthesize how these moving international pieces interplay to impact Canadian industrial capacity, national productivity, regional corridors, and the economic prosperity of everyday Canadian citizens.
-
-THE 8 STRATEGIC MACRO THEMES MENU (Cherry-pick the 4 to 6 most active this week):
-1. Sovereign Trade Architecture & Treaty Execution (CPTPP implementation, CETA utilization, Team Canada trade missions, CEPA/FIPA negotiations, rules of origin, bilateral frameworks).
-2. Critical Minerals & Strategic Supply Chains (Rare earths, lithium, nickel, cobalt, EV battery corridors, processing agreements with Japan, South Korea, Germany, and the UK).
-3. Clean Energy Corridors & Industrial Decarbonization (West Coast LNG export infrastructure, transatlantic clean hydrogen/ammonia pacts with Germany and the Netherlands, civil nuclear/SMR exports).
-4. Agrifood, Fertilizer & Global Food Security (Grains, wheat, pulses, canola, pork, potash exports to Indo-Pacific/European markets, sanitary and phytosanitary approvals).
-5. National Corridors & Logistical Fluidity (Physical logistics: CN/CPKC rail networks, gateway ports at Vancouver, Prince Rupert, Montreal, Halifax, Saint John, container dwell times, maritime freight rates).
-6. Regulatory Compliance & Non-Tariff Barriers (Navigating EU CBAM, EUDR deforestation regulations, ESG reporting standards, technical market-entry barriers).
-7. Macro Financial Conditions & Exporter Margins (Currency swings in CAD/USD, CAD/EUR, CAD/JPY, central bank rate divergences, EDC/BDC export credit facilities, commodity pricing benchmarks).
-8. Geopolitical Crosswinds & Sovereign Defense (Multipolar alignments, allied friendshoring/nearshoring, critical supply chain security, strategic insulation from continental protectionist risks).
-
-# SECTION 2: TARIFFS & POLICY INTERVENTIONS (GLOBAL TRADE ALERT)
-- Macro policy shifts, international trade agreements, tariff adjustments, countervailing measures, and subsidies impacting Canadian access in EUD and IPD.
-
-# SECTION 3: STRATEGIC CORRIDORS & SUPPLY CHAINS (HINRICH FOUNDATION & GAC)
-- Canadian corridor development, clean tech partnerships, critical mineral security, and multilateral treaty utilization.
-
-# SECTION 4: COUNTRY IMPACT MATRIX (57 LISTED COUNTRIES)
-- Specific Month/Year dates, commodity sectors, policy mechanisms, and source URLs for affected partner nations.
-
-# SECTION 5: ECONOMIST FIELD NOTES & EARLY SIGNALS
-- Expert observations on structural risks, early warning signals, and longitudinal macroeconomic patterns.
+## 4. Pacific Early Signals & Field Notes
+(2-3 paragraphs of qualitative early warning signals, regulatory friction, or informal market intelligence for Canadian exporters).
 `;
 }
 
+function buildEUDResearchPrompt(currentYear, quantitativeSummary) {
+  return `
+Conduct an investigative fact-gathering sweep of Canadian commercial trade, logistics, and bilateral policy developments in the EUROPEAN UNION & EFTA (EUD) basin over the past 7 to 30 days.
 
-function buildCompilerPrompt(deepResearchBrief, currentYear, editionId, editionDate) {
+Target Region (EUD - 33 economies):
+${JSON.stringify(EUD_COUNTRIES)}
+
+Recent Trade Volumes for Context (from Statistics Canada):
+${quantitativeSummary}
+
+Key Focus Corridors & Sectors:
+1. East Coast Maritime Gateways: St. Lawrence Seaway, Port of Montreal, Port of Halifax, Port of Saint John, transatlantic shipping fluidity, container dwell times.
+2. Carbon Border & Regulatory Barriers: EU CBAM compliance impact on Canadian hydro-aluminum smelters (Quebec/BC), steel, and fertilizers; EUDR deforestation compliance on Canadian pulp/forestry; CETA joint committee rulings.
+3. Energy & Strategic Commodities: Transatlantic green hydrogen/ammonia alliances with Germany and the Netherlands; civil nuclear/SMR reactor engineering (OPG in Romania/Poland/Czechia); critical mineral offtakes with European automakers.
+4. Agrifood: Non-tariff sanitary/phytosanitary issues (durum wheat mycotoxin limits in Italy, pulse drying agents).
+
+REQUIRED OUTPUT FORMAT (Markdown):
+## 1. Top European Breaking Events & Regulatory Shifts
+(List 3-5 verified events from the past 7-30 days with exact dates, policy mechanisms, EU directives, and verifiable source URLs from Global Affairs Canada, Global Trade Alert, Hinrich Foundation, or European Commission/WTO).
+
+## 2. Atlantic Logistics & Gateway Status
+(Container dwell times at Halifax/Montreal, shipping rate trends, rail connections into Central Canada).
+
+## 3. Country Card Delta Updates (Active European Nations Only)
+For each European country that experienced a verified, active shift this week (maximum 5-8 countries):
+- **Country Name**: (Must be strictly from EUD list)
+- **Month/Year**: (e.g., Oct ${currentYear})
+- **Bullet Text**: (Strictly ≤ 20 words, must start with "Month Year:", summarizing the exact shift)
+- **Trade Stance**: (1 punchy sentence summarizing current bilateral posture)
+- **Deep Source URL**: (Direct, specific URL—NOT homepages like international.gc.ca)
+
+## 4. Atlantic Early Signals & Field Notes
+(2-3 paragraphs of qualitative early warning signals, regulatory hurdles, or non-tariff barriers facing Canadian exporters).
+`;
+}
+
+function buildLeadEditorialPrompt(ipdBrief, eudBrief, currentYear, editionDate) {
+  return `
+You are writing the lead weekly macroeconomic trade cover story for the Canada Trade Visualizer.
+Your audience consists of Canadian business executives, trade commissioners, logistics operators, and policymakers.
+Style: Senior Canadian investigative trade journalism (incisive, grounded, empirical).
+
+INTELLECTUAL MANDATE:
+- Synthesize the verified factual findings from the Indo-Pacific (IPD) and European Union (EUD) intelligence briefs below.
+- Write a compelling, hard-nosed Canadian trade investigation.
+- Length: Strictly 1,200 to 1,500 words. (Every paragraph must be packed with facts, numbers, and analysis. Zero filler).
+- Voice: Muscular, skeptical, realistic. Highlight the trade-offs: what is working, what is stalled, where Canadian exporters are hitting regulatory walls, and what the monetary stakes are.
+
+STRICT BANNED WORDS & OPENINGS:
+- DO NOT USE: "sovereign statecraft", "sovereign protagonist", "panoramic synthesis", "macroeconomic mosaic", "deliberate transition", "vanguard", "catalyst", "testament", "tapestry", "pivotal", "synergies", "multi-vector", "from coast to coast".
+- DO NOT OPEN WITH: "As the [quarter/month] unfolds...", "Against the backdrop of...", "In an increasingly volatile world...", or "Canada's trade architecture is undergoing...".
+
+CRITICAL FORMATTING & PROSE RULES:
+- ABSOLUTELY NO OUTLINE HEADERS OR STRUCTURAL META-LABELS: NEVER output "# Part 1", "# Part 2", "# Part 3", "Part 1: The Lead", "Theme 1", or "Section 1". This is a finished magazine feature article.
+- Start IMMEDIATELY with the opening paragraph. Do NOT prepend any title, subtitle, or "Part 1" header.
+- Use ONLY organic, informative journalistic subheadings (e.g. "## Pacific Gateways: Offtake Expansion and Regulatory Friction", "## The Atlantic Gauntlet: Brussels Carbon Borders", "## The Bottom Line") to break up thematic shifts.
+
+NARRATIVE FLOW (Flow naturally without meta-labels):
+1. The Hard News Opening (~250 words): Start immediately with the single most consequential trade, tariff, or corridor event that occurred this week. Establish the stakes: CAD dollar volumes, affected Canadian provinces, corporate balance sheets, and reducing reliance on the US baseline.
+2. Thematic Deep Dives (~700-900 words): Break into 3-4 sections with descriptive subheadings (e.g. "## Pacific Gateways: ...", "## The Atlantic Gauntlet: ...", "## Agrifood Defense: ...", "## Transport Chokepoints: ..."). Include specific companies, port dwell times, tonnages, and dollar figures.
+3. The Concluding Synthesis (~250-350 words): Use the header "## The Bottom Line". Analyze the net impact on Canadian exporter profit margins, currency valuation, and employment. Conclude with the next regulatory or operational hurdle.
+
+---
+RAW INDO-PACIFIC (IPD) INTELLIGENCE:
+${ipdBrief}
+
+---
+RAW EUROPEAN UNION (EUD) INTELLIGENCE:
+${eudBrief}
+`;
+}
+
+function buildD1CompilerPrompt(editorialArticle, ipdBrief, eudBrief, currentYear, editionId, editionDate) {
   return `
 You are the Desk Compiler for the Canada Trade Visualizer.
-Convert the provided Macroeconomic Trade Research Dossier into structured JSON format for immediate database insertion.
+Convert the provided lead editorial briefing and the regional intelligence briefs into structured JSON format for edge database insertion.
 
 CRITICAL INSTRUCTIONS:
-1. Filter strictly for countries in the whitelisted list: ${JSON.stringify(LISTED_COUNTRIES)}.
-2. Format the Weekly Digest (UI Public Record):
-   - id: "${editionId}"
-   - edition_date: "${editionDate}"
-   - headline: A sharp, professional journalistic headline (max 15 words).
-   - summary: The complete Section 1 Editorial Summary from the research dossier (the full 1,600 to 2,200 words across all thematic subsections, preserving all markdown subheadings verbatim; do NOT truncate, condense, or summarize).
-   - key_developments: Array of top 3-5 developments with { title, tag, source_name, source_url, description }.
-     tag must be one of: "Policy Watch", "Bilateral Agreement", "Market Intelligence", "Clean Energy".
-   - countries_affected: Array of valid country names mentioned.
-   - primary_sources: Array of { title, url }.
-   - economist_notes: The text extracted from Section 5 (Economist Field Notes & Early Signals).
-   (Note: Do NOT output full_research_publication in JSON; the system attaches the raw research dossier automatically).
-3. Selective Country Card Updates:
-   - ONLY generate updates for countries that experienced active, verified shifts in Section 4.
-   - If a country experienced no active policy shifts this week, DO NOT include it in country_updates (leave its card untouched).
-   - Each bullet_text must be strictly ≤ 20 words and include a Month/Year date (e.g., "Sep ${currentYear}: ...").
-   - trade_stance: 1 tight sentence summarizing current bilateral posture.
+1. Headline: An incisive, professional journalistic headline (strictly ≤ 15 words). No clickbait.
+2. Summary: The complete, verbatim text of the Lead Editorial Article (Parts 1, 2, and 3). Do NOT summarize, truncate, or rewrite.
+3. Key Developments: Extract 3 to 5 structured highlights from the article and regional briefs.
+   Each item must be:
+   - title: Max 10 words.
+   - tag: Strictly one of: "Policy Watch", "Bilateral Agreement", "Market Intelligence", "Clean Energy".
+   - source_name: Name of publishing institution (e.g. Global Affairs Canada, Global Trade Alert, Hinrich Foundation, WTO, Port of Vancouver).
+   - source_url: Direct specific URL (NOT bare root domains like https://www.international.gc.ca).
+   - description: 1-2 tight sentences detailing direct export or supply chain impact.
+4. Countries Affected: Whitelisted country names directly mentioned as having active commercial developments.
+5. Primary Sources: Array of 3-5 verified outbound citations with exact document/article titles and specific URLs.
+6. Economist Notes: Extract and synthesize the early warning signals from Section 4 of the IPD and EUD briefs (concise, analytical notes for internal audit).
+7. Country Updates: Extract all country card delta updates from the IPD and EUD briefs.
+   - country_name: Must be in ${JSON.stringify(LISTED_COUNTRIES)}.
+   - year: "${currentYear}"
+   - bullet_text: Strictly ≤ 20 words, must begin with "Month YYYY:" (e.g., "Oct ${currentYear}: ...").
+   - trade_stance: 1 punchy sentence.
 
-RESEARCH DOSSIER:
-${deepResearchBrief}
+LEAD EDITORIAL BRIEFING:
+${editorialArticle}
 
-OUTPUT JSON FORMAT ONLY:
+INDO-PACIFIC BRIEF:
+${ipdBrief}
+
+EUROPEAN UNION BRIEF:
+${eudBrief}
+
+OUTPUT STRICT JSON ONLY:
 {
   "weekly_digest": {
     "id": "${editionId}",
@@ -152,14 +218,14 @@ OUTPUT JSON FORMAT ONLY:
       {
         "title": "...",
         "tag": "Policy Watch | Bilateral Agreement | Market Intelligence | Clean Energy",
-        "source_name": "Global Trade Alert | Hinrich Foundation | Global Affairs Canada",
-        "source_url": "https://...",
+        "source_name": "...",
+        "source_url": "...",
         "description": "..."
       }
     ],
     "countries_affected": ["..."],
     "primary_sources": [
-      { "title": "...", "url": "https://..." }
+      { "title": "...", "url": "..." }
     ],
     "economist_notes": "..."
   },
@@ -175,57 +241,6 @@ OUTPUT JSON FORMAT ONLY:
 `;
 }
 
-async function callInteractionsAgent(agentName, prompt, systemInstruction) {
-  const url = 'https://generativelanguage.googleapis.com/v1beta/interactions';
-  console.log(`📡 [Tier 1] Submitting research task to Google Interactions API (${agentName})...`);
-
-  const postRes = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-goog-api-key': API_KEY
-    },
-    body: JSON.stringify({
-      agent: agentName,
-      background: true,
-      input: `${systemInstruction}\n\n${prompt}`
-    })
-  });
-
-  if (!postRes.ok) {
-    const errText = await postRes.text();
-    throw new Error(`Interactions POST error (${postRes.status}): ${errText}`);
-  }
-
-  const postData = await postRes.json();
-  const interactionId = postData.id;
-  console.log(`✅ [Tier 1] Interaction accepted! ID: ${interactionId}`);
-  console.log(`⏳ [Tier 1] Polling agent for completion (this takes ~1-3 minutes for deep web research)...`);
-
-  const startTime = Date.now();
-  while (Date.now() - startTime < 300000) { // 5 minute max
-    await new Promise(r => setTimeout(r, 8000));
-    process.stdout.write('.');
-    const getRes = await fetch(`${url}/${interactionId}`, {
-      headers: { 'X-goog-api-key': API_KEY }
-    });
-    if (!getRes.ok) continue;
-
-    const getData = await getRes.json();
-    if (getData.status === 'completed' || getData.status === 'done') {
-      console.log(`\n🎉 [Tier 1] Deep Research completed in ${Math.round((Date.now() - startTime) / 1000)}s!`);
-      const lastStep = getData.steps?.[getData.steps.length - 1];
-      const text = lastStep?.content?.[0]?.text || getData.output;
-      if (text) return text;
-    }
-    if (getData.status === 'failed' || getData.status === 'error') {
-      throw new Error(`Deep Research interaction failed: ${JSON.stringify(getData.error || 'Unknown error')}`);
-    }
-  }
-
-  throw new Error('Deep Research polling timed out after 5 minutes.');
-}
-
 async function callGeminiModel(model, prompt, systemInstruction, enableGrounding = false, jsonMode = false) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
@@ -234,7 +249,7 @@ async function callGeminiModel(model, prompt, systemInstruction, enableGrounding
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: { 
       temperature: 0.2,
-      maxOutputTokens: 8192
+      maxOutputTokens: 32768
     }
   };
 
@@ -270,7 +285,8 @@ async function callGeminiModel(model, prompt, systemInstruction, enableGrounding
 
 async function main() {
   console.log(`\n======================================================`);
-  console.log(`🚀 AUTONOMOUS EXPORT ECONOMIST: LIVE DRY-RUN PIPELINE`);
+  console.log(`🇨🇦 AUTONOMOUS TRADE INTELLIGENCE: DECOMPOSED PIPELINE`);
+  console.log(`   (Senior Investigative Standard | Gemini 3.8 Flash | Zero Truncation)`);
   console.log(`======================================================\n`);
 
   const dbPath = path.join(rootDir, 'db', 'production.db');
@@ -282,17 +298,25 @@ async function main() {
     try { masterDb = new Database(masterDbPath); } catch {}
   }
 
+  // 0. Clean old faulty entries as requested
+  console.log(`🧹 Deleting old/faulty test entries from weekly_digests in local database...`);
+  const delStmt = db.prepare(`DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40', '2026-W41')`);
+  const delResult = delStmt.run();
+  console.log(`   Cleared ${delResult.changes} legacy records from weekly_digests.`);
+  if (masterDb) {
+    try { masterDb.prepare(`DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40', '2026-W41')`).run(); } catch {}
+  }
+
   const now = new Date();
   const currentYear = now.getFullYear();
-  // Generate current week edition ID e.g. 2026-W40
   const startOfYear = new Date(currentYear, 0, 1);
   const weekNum = Math.ceil((((now - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);
   const editionId = `${currentYear}-W${String(weekNum).padStart(2, '0')}`;
   const editionDate = now.toISOString().split('T')[0];
 
-  console.log(`📅 Target Edition: ${editionId} (${editionDate})`);
+  console.log(`📅 Publishing Edition: ${editionId} (${editionDate})`);
 
-  // 1. Gather Macro Baseline
+  // 1. Gather Macro Baseline Context
   console.log(`📊 Querying macro trade totals for ${currentYear}...`);
   const macroRows = db.prepare(`
     SELECT c.country_name, SUM(r.total_export_value_cad) as total_val
@@ -310,43 +334,57 @@ async function main() {
 
   console.log(`   Baseline Context: ${quantitativeSummary.slice(0, 120)}...\n`);
 
-  // 2. Tier 1: Deep Research
-  console.log(`🔍 [Tier 1] Initiating Chief Investigative Economist research...`);
-  const deepResearchPrompt = buildDeepResearchPrompt(currentYear, quantitativeSummary);
-  let researchBrief = '';
+  // 2. Stage 1: Parallel Regional Investigations (Flash + Google Search Grounding)
+  console.log(`🔍 [Stage 1] Executing parallel regional sweeps via Gemini 3.8 Flash + Search Grounding...`);
+  console.log(`   • Sweep 1A: Indo-Pacific (IPD - 21 countries, Vancouver/Rupert gateways)`);
+  console.log(`   • Sweep 1B: European Union & EFTA (EUD - 33 countries, Montreal/Halifax, CBAM)`);
 
-  const forceFlash = process.env.FORCE_FALLBACK === 'true' || process.argv.includes('--flash');
-  if (forceFlash) {
-    console.log(`⚡ [Option 2: Fast Flash-Test] Invoking Gemini 3.8 Flash directly with Google Search Grounding...`);
-    researchBrief = await callGeminiModel(DEFAULT_MODEL, deepResearchPrompt, ECONOMIST_SYSTEM_PROMPT, true);
-  } else {
-    try {
-      researchBrief = await callInteractionsAgent(DEEP_RESEARCH_MODEL, deepResearchPrompt, ECONOMIST_SYSTEM_PROMPT);
-    } catch (err) {
-      console.warn(`⚠️ [Tier 1] Deep Research agent failed or timed out: ${err.message}`);
-      console.log(`🔄 [Tier 1 Fallback] Invoking Gemini 3.8 Flash with Google Search Grounding...`);
-      researchBrief = await callGeminiModel(DEFAULT_MODEL, deepResearchPrompt, ECONOMIST_SYSTEM_PROMPT, true);
-    }
-  }
+  const [ipdBrief, eudBrief] = await Promise.all([
+    callGeminiModel(DEFAULT_MODEL, buildIPDResearchPrompt(currentYear, quantitativeSummary), TRADE_REPORTER_SYSTEM_PROMPT, true),
+    callGeminiModel(DEFAULT_MODEL, buildEUDResearchPrompt(currentYear, quantitativeSummary), TRADE_REPORTER_SYSTEM_PROMPT, true)
+  ]);
 
-  console.log(`\n📄 Tier 1 Research Brief received (${researchBrief.length} chars).`);
+  console.log(`   ✅ Stage 1 complete! IPD Brief (${ipdBrief.length} chars) | EUD Brief (${eudBrief.length} chars)`);
 
-  // Save full research publication locally for review
-  const pubFilePath = path.join(rootDir, 'docs', 'LATEST_RESEARCH_PUBLICATION.md');
-  const pubContent = `# Autonomous Export Economist: Full Research Publication\n**Edition**: ${editionId} (${editionDate})\n**Archived**: ${new Date().toISOString()}\n\n---\n\n${researchBrief}`;
-  fs.writeFileSync(pubFilePath, pubContent, 'utf8');
-  console.log(`💾 Saved backend publication archive to: docs/LATEST_RESEARCH_PUBLICATION.md`);
+  // 3. Stage 2: The Lead Editorial Monograph (Flash as Lead Writer)
+function cleanEditorialProse(rawText) {
+  if (!rawText) return '';
+  return rawText
+    // Replace Part 3 / Concluding header with clean journalistic header if needed
+    .replace(/^#+\s*Part\s*3[:\s-]*(The\s+Canadian\s+Bottom\s+Line|The\s+Bottom\s+Line|Conclusion)?.*$/gim, '## The Bottom Line')
+    // Remove any remaining Part 1, Part 2, etc.
+    .replace(/^#+\s*Part\s*\d+.*$/gim, '')
+    // Remove any Theme 1, Section 1 headers
+    .replace(/^#+\s*(Theme|Section)\s*\d+.*$/gim, '')
+    // Clean excessive blank lines
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
-  // 3. Tier 2: Structured Compilation
-  console.log(`\n⚡ [Tier 2] Compiling brief via Gemini 3.8 Flash (JSON Mode)...`);
-  const compilerPrompt = buildCompilerPrompt(researchBrief, currentYear, editionId, editionDate);
-  const rawCompilerJson = await callGeminiModel(DEFAULT_MODEL, compilerPrompt, ECONOMIST_SYSTEM_PROMPT, false, true);
+  console.log(`\n✍️ [Stage 2] Commissioning Lead Editorial Cover Story...`);
+  const editorialPrompt = buildLeadEditorialPrompt(ipdBrief, eudBrief, currentYear, editionDate);
+  const rawArticle = await callGeminiModel(DEFAULT_MODEL, editorialPrompt, TRADE_REPORTER_SYSTEM_PROMPT, false);
+  const editorialArticle = cleanEditorialProse(rawArticle);
+
+  const wordCount = editorialArticle.trim().split(/\s+/).filter(Boolean).length;
+  console.log(`   ✅ Stage 2 complete! Article Word Count: ${wordCount} words (Target: 1,200 - 1,500)`);
+
+  // 4. Stage 3: Structured Desk Compiler (Flash JSON Mode)
+  console.log(`\n⚡ [Stage 3] Compiling briefing into edge database JSON...`);
+  const compilerPrompt = buildD1CompilerPrompt(editorialArticle, ipdBrief, eudBrief, currentYear, editionId, editionDate);
+  const rawCompilerJson = await callGeminiModel(DEFAULT_MODEL, compilerPrompt, TRADE_REPORTER_SYSTEM_PROMPT, false, true);
 
   let structuredData;
   try {
     let cleaned = rawCompilerJson.trim();
     if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
     else if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+    }
     structuredData = JSON.parse(cleaned);
   } catch (err) {
     console.error(`❌ JSON Parse Error:`, err.message);
@@ -355,24 +393,49 @@ async function main() {
   }
 
   const digest = structuredData.weekly_digest;
+  digest.summary = cleanEditorialProse(digest.summary);
   const countryUpdates = structuredData.country_updates || [];
 
-  const wordCount = digest.summary ? digest.summary.trim().split(/\s+/).filter(Boolean).length : 0;
-  const headings = digest.summary ? (digest.summary.match(/^###\s+.+$/gm) || []) : [];
-
-  console.log(`\n📰 WEEKLY DIGEST COMPILED:`);
+  console.log(`\n📰 PUBLICATION SUMMARY:`);
   console.log(`   ID: ${digest.id}`);
   console.log(`   Headline: "${digest.headline}"`);
-  console.log(`   Summary Word Count: ${wordCount} words (Target: 1,600 - 2,200)`);
-  console.log(`   Summary Paragraphs: ${digest.summary.split('\n\n').length}`);
-  console.log(`   Thematic Subheadings Found (${headings.length}):`);
-  headings.forEach(h => console.log(`     ${h}`));
-  console.log(`   Key Developments: ${digest.key_developments?.length || 0}`);
+  console.log(`   Summary Word Count: ${digest.summary.trim().split(/\s+/).filter(Boolean).length} words`);
+  console.log(`   Key Developments (${digest.key_developments?.length || 0}):`);
+  (digest.key_developments || []).forEach(k => console.log(`     • [${k.tag}] ${k.title} (${k.source_name})`));
   console.log(`   Countries Affected: ${(digest.countries_affected || []).join(', ')}`);
   console.log(`   Primary Sources: ${digest.primary_sources?.length || 0}`);
+  console.log(`   Economist Notes: "${(digest.economist_notes || '').slice(0, 100)}..."`);
+  console.log(`   Country Card Updates: ${countryUpdates.length} countries`);
 
-  // 4. Save to Database
-  console.log(`\n💾 Writing to production database...`);
+  // Full research publication combines Editorial + IPD + EUD cleanly
+  const fullResearchPublication = `# Autonomous Export Economist: Full Research Publication
+**Edition**: ${editionId} (${editionDate})
+**Standard**: Canadian Investigative Trade & Export Intelligence
+**Archived**: ${new Date().toISOString()}
+
+---
+
+# SECTION 1: THE LEAD EDITORIAL BRIEFING
+${digest.summary}
+
+---
+
+# SECTION 2: INDO-PACIFIC (IPD) REGIONAL INTELLIGENCE
+${ipdBrief}
+
+---
+
+# SECTION 3: EUROPEAN UNION & EFTA (EUD) REGIONAL INTELLIGENCE
+${eudBrief}
+
+---
+
+# SECTION 4: ECONOMIST FIELD NOTES & EARLY SIGNALS
+${digest.economist_notes || 'All regional corridors operating within verified operational parameters.'}
+`;
+
+  // 5. Save to Local Production Database
+  console.log(`\n💾 Writing to local production database...`);
   const upsertStmt = db.prepare(`
     INSERT INTO weekly_digests (
       id, edition_date, headline, summary, key_developments,
@@ -397,7 +460,7 @@ async function main() {
     JSON.stringify(digest.key_developments || []),
     JSON.stringify(digest.countries_affected || []),
     JSON.stringify(digest.primary_sources || []),
-    digest.full_research_publication || researchBrief,
+    fullResearchPublication,
     digest.economist_notes || null
   );
 
@@ -425,14 +488,14 @@ async function main() {
         JSON.stringify(digest.key_developments || []),
         JSON.stringify(digest.countries_affected || []),
         JSON.stringify(digest.primary_sources || []),
-        digest.full_research_publication || researchBrief,
+        fullResearchPublication,
         digest.economist_notes || null
       );
     } catch {}
   }
 
-  // 5. Apply Selective Country Card Updates
-  console.log(`\n🌍 Processing Selective Country Updates (${countryUpdates.length} updates):`);
+  // 6. Apply Selective Country Card Updates
+  console.log(`\n🌍 Applying Selective Country Updates:`);
   for (const upd of countryUpdates) {
     if (!LISTED_COUNTRIES.includes(upd.country_name)) {
       console.log(`   ⏭️ Skipping unlisted country: ${upd.country_name}`);
@@ -464,12 +527,140 @@ async function main() {
         } catch {}
       }
 
-      console.log(`   ✅ [${upd.country_name}] Updated note (${upd.bullet_text.split(' ').length} words): "${upd.bullet_text}"`);
+      console.log(`   ✅ [${upd.country_name}] (${upd.bullet_text.split(' ').length} words): "${upd.bullet_text}"`);
     }
   }
 
+  // 7. Generate D1 Execution Patch (db/latest_week_patch.sql) with Old Entries Deletion Prepend
+  function escapeSql(val) {
+    if (val === null || val === undefined) return 'NULL';
+    return `'` + String(val).replace(/'/g, "''") + `'`;
+  }
+
+  const patchStatements = [];
+
+  // PS: Deleting old entries from D1
+  patchStatements.push(`-- 1. Clean up legacy/faulty entries from remote Cloudflare D1
+DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40', '2026-W41');`);
+
+  // Insert the new clean weekly digest
+  patchStatements.push(`-- 2. Insert verified weekly digest
+INSERT INTO weekly_digests (
+  id, edition_date, headline, summary, key_developments,
+  countries_affected, primary_sources, full_research_publication,
+  economist_notes, created_at
+) VALUES (
+  ${escapeSql(digest.id)},
+  ${escapeSql(digest.edition_date)},
+  ${escapeSql(digest.headline)},
+  ${escapeSql(digest.summary)},
+  ${escapeSql(JSON.stringify(digest.key_developments || []))},
+  ${escapeSql(JSON.stringify(digest.countries_affected || []))},
+  ${escapeSql(JSON.stringify(digest.primary_sources || []))},
+  ${escapeSql(fullResearchPublication)},
+  ${escapeSql(digest.economist_notes || null)},
+  CURRENT_TIMESTAMP
+);`);
+
+  // Update country context cards
+  for (const upd of countryUpdates) {
+    if (!LISTED_COUNTRIES.includes(upd.country_name)) continue;
+    const row = db.prepare('SELECT deals_and_disruptions, trade_stance FROM country_context WHERE country_name = ?').get(upd.country_name);
+    if (row) {
+      patchStatements.push(`UPDATE country_context SET deals_and_disruptions = ${escapeSql(row.deals_and_disruptions)}, trade_stance = ${escapeSql(row.trade_stance)}, last_updated_at = CURRENT_TIMESTAMP WHERE country_name = ${escapeSql(upd.country_name)};`);
+    }
+  }
+
+  const patchFilePath = path.join(rootDir, 'db', 'latest_week_patch.sql');
+  fs.writeFileSync(patchFilePath, patchStatements.join('\n\n') + '\n', 'utf8');
+  console.log(`\n💾 Generated D1 execution patch: db/latest_week_patch.sql`);
+
+  // 8. Convert SQL Text into a Clean Human-Readable Verification Document
+  console.log(`📄 Generating verification documentation for human review...`);
+  const verificationDocPath = path.join(rootDir, 'docs', 'VERIFICATION_BRIEFING.md');
+  const pubFilePath = path.join(rootDir, 'docs', 'LATEST_RESEARCH_PUBLICATION.md');
+
+  const verificationDocContent = `# Canada Trade Intelligence: Weekly Briefing Verification Document
+**Edition ID**: \`${digest.id}\` | **Date**: \`${digest.edition_date}\` | **Standard**: Canadian Investigative Trade & Export Intelligence
+**Generated**: ${new Date().toISOString()}
+
+> [!NOTE]
+> This document has been compiled directly from the live multi-stage pipeline run. 
+> Old faulty entries (\`2026-W38\`, \`2026-W39\`, \`2026-W40\`, \`2026-W41\`) have been purged from \`db/production.db\` and scheduled for deletion in the D1 deployment patch.
+
+---
+
+## 1. Editorial Headline
+# ${digest.headline}
+
+---
+
+## 2. Lead Editorial Article (Canadian Trade Intelligence Standard)
+**Word Count**: ${digest.summary.trim().split(/\s+/).filter(Boolean).length} words | **Target**: 1,200 - 1,500 words
+
+${digest.summary}
+
+---
+
+## 3. Key Developments Strip (For Frontend Cards)
+${(digest.key_developments || []).map((k, idx) => `
+### ${idx + 1}. [${k.tag}] ${k.title}
+- **Source**: ${k.source_name}
+- **Verification Link**: [${k.source_url}](${k.source_url})
+- **Impact Summary**: ${k.description}
+`).join('\n')}
+
+---
+
+## 4. Countries Affected
+${(digest.countries_affected || []).map(c => `\`${c}\``).join(' • ')}
+
+---
+
+## 5. Primary Outbound Sources (Deep Links)
+${(digest.primary_sources || []).map(s => `- [${s.title}](${s.url}) (\`${s.url}\`)`).join('\n')}
+
+---
+
+## 6. Economist Field Notes & Early Warning Signals (Section 5 Backend Audit)
+${digest.economist_notes || 'All monitored trade corridors operating within baseline parameters.'}
+
+---
+
+## 7. Selective Country Card Updates (\`country_context\`)
+The following ${countryUpdates.length} partner nations experienced active, verified shifts this week:
+
+| Country | Year | Card Bullet Text (≤ 20 words, with timestamp) | Bilateral Trade Stance (1 sentence) |
+| :--- | :---: | :--- | :--- |
+${countryUpdates.map(u => `| **${u.country_name}** | \`${u.year}\` | ${u.bullet_text} | ${u.trade_stance} |`).join('\n')}
+
+---
+
+## 8. Database Cleanup & Deployment Script Preview
+Below is the clean D1 deployment script generated in \`db/latest_week_patch.sql\`:
+
+\`\`\`sql
+${patchStatements.join('\n\n')}
+\`\`\`
+`;
+
+  fs.writeFileSync(verificationDocPath, verificationDocContent, 'utf8');
+  fs.writeFileSync(pubFilePath, fullResearchPublication, 'utf8');
+  console.log(`💾 Saved Human-Readable Verification Document: docs/VERIFICATION_BRIEFING.md`);
+  console.log(`💾 Saved Full Archival Dossier: docs/LATEST_RESEARCH_PUBLICATION.md`);
+
+  // 9. Sync SQLite dump to db/production.sql
+  try {
+    const dumpSql = execSync(`sqlite3 "${dbPath}" .dump`, { encoding: 'utf8' });
+    fs.writeFileSync(path.join(rootDir, 'db', 'production.sql'), dumpSql, 'utf8');
+    console.log(`💾 Synced SQLite dump to: db/production.sql`);
+  } catch (dumpErr) {
+    console.warn(`⚠️ Could not auto-sync production.sql: ${dumpErr.message}`);
+  }
+
   console.log(`\n======================================================`);
-  console.log(`✨ DRY-RUN COMPLETED SUCCESSFULLY!`);
+  console.log(`✨ DRY-RUN COMPLETED! (NO REMOTE DEPLOYMENT PERFORMED)`);
+  console.log(`   Review docs/VERIFICATION_BRIEFING.md for human audit.`);
   console.log(`======================================================\n`);
 }
 

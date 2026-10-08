@@ -14,7 +14,10 @@
     "start": "next start",
     "lint": "next lint",
     "test": "node --experimental-strip-types scripts/test_api_logic.mjs && next lint",
-    "ingest": "node scripts/ingest_raw_data.mjs"
+    "ingest": "node scripts/ingest_raw_data.mjs",
+    "deploy:d1": "node scripts/deploy_d1.mjs",
+    "deploy:d1:full": "node scripts/deploy_d1.mjs --full",
+    "deploy:d1:verify": "node scripts/deploy_d1.mjs --verify"
   },
   "keywords": [],
   "author": "",
