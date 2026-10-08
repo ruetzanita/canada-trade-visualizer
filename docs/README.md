@@ -54,7 +54,7 @@ The raw quantitative trade data is sourced directly from the **Government of Can
   - `ODPF_*.TXT`: Supporting metadata and classification description tables.
 - **Update Frequency & Cumulative Cadence:**
   - Statistics Canada publishes monthly updates approximately **35 days after reference month end**.
-  - Current-year archives are cumulative. For example, `CIMT-CICM_Dom_Exp_2026.zip` delivers `ODPFN016_202607N.csv` (January through July 2026) along with retroactive monthly revisions.
+  - Current-year archives are cumulative. For example, `CIMT-CICM_Dom_Exp_2026.zip` delivers `ODPFN016_202608N.csv` (January through August 2026) along with retroactive monthly revisions.
 - **Monthly Update Procedure:**
   1. Download the latest `CIMT-CICM_Dom_Exp_YYYY.zip` from the direct endpoint above.
   2. Extract the archive into `raw_data/CIMT-CICM_Dom_Exp_YYYY/`, replacing the expired month folder.

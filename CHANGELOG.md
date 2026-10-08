@@ -26,6 +26,24 @@ To maintain codebase hygiene and prevent file sprawl, all developers and AI agen
    - Always run type checks or build verification (`npm run build`) before committing changes.
    - Never commit untracked build artifacts (`.next/`, `.wrangler/`, `out/`, `*.tsbuildinfo`).
 
+### October 7, 2026 -> August 2026 CIMT Dataset Ingestion & Production Edge Compilation
+
+* **August 2026 CIMT Dataset Ingestion & Production Edge Synchronization**:
+  * *Change*:
+    - **Upgraded Ingestion Pipeline (`scripts/ingest_raw_data.mjs`)**: Added automated file discovery and release grouping (`findLatestOdpfnFiles`), ensuring only the latest cumulative monthly release per year is ingested while automatically skipping and alerting on superseded files. Added automatic synchronization of HS8 commodity descriptions from `ODPF_2_HS8Desc.TXT` into `commodities`.
+    - **Raw Data Ingested**: Ingested 792,695 tracked commodity export rows from `raw_data/CIMT-CICM_Dom_Exp_2026/CIMT-CICM_Dom_Exp_2026/ODPFN016_202608N.csv` into `db/unified_master.db` covering January through August 2026 across all 60 partner nations.
+    - **Materialized Summary Recomputation**: Generated 480 monthly aggregate rows in `macro_monthly_summary` for 2026. Total database coverage extended from 67 to 68 distinct months (`202101` – `202608`) and 4,080 total summary records.
+    - **Production Edge Database & SQL Synchronization (`scripts/build_production_db.mjs`)**: Built updated `db/production.db` and automatically synced SQLite dump to `db/production.sql` for Cloudflare D1 deployment.
+    - **Dataset Housekeeping**: Removed superseded July files (`ODPFN016_202607N.csv`, `ODPFN018_202607N.csv`, `ODPFN020_202607N.csv`) to conserve space and align with cumulative archive standards.
+    - **Validation**: Verified full test suite (`npm test`), temporal boundaries (`min_month=202101`, `max_month=202608`), and production build (`npm run build:prod`).
+  * *Files Modified*:
+    - [scripts/ingest_raw_data.mjs](scripts/ingest_raw_data.mjs)
+    - [scripts/build_production_db.mjs](scripts/build_production_db.mjs)
+    - [db/production.db](db/production.db)
+    - [db/production.sql](db/production.sql)
+    - [docs/README.md](docs/README.md)
+    - [CHANGELOG.md](CHANGELOG.md)
+
 ### September 30, 2026 -> WCAG AA Accessibility Compliance, Progressive 3D WebGL Mounting, Semantic Architecture & SEO Infrastructure
 
 * **WCAG AA Color Contrast & Typography Standardization**:
