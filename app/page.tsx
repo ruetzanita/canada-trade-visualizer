@@ -6,6 +6,8 @@ import { X, ChevronUp, ChevronDown, ExternalLink, Sparkles, Database } from 'luc
 import styles from './page.module.css';
 import { REGION_CONFIGS, getRegionConfig, getCountryRegion, resolveCountryDisplayName } from '../db/geo_metadata';
 import HeaderMacroChart from './components/HeaderMacroChart';
+import GlobeErrorBoundary, { isWebGLSupported } from './components/GlobeErrorBoundary';
+import GlobeFallback from './components/GlobeFallback';
 
 // Dynamically import components so they only render on client
 const GlobeViz = dynamic(() => import('./components/GlobeViz'), { 
@@ -33,11 +35,17 @@ export default function Dashboard() {
   const [activeMobileView, setActiveMobileView] = useState<'globe' | 'sankey'>('globe');
   const [showDigest, setShowDigest] = useState(false);
   const [load3D, setLoad3D] = useState(false);
+  const [webGLAvailable, setWebGLAvailable] = useState<boolean | null>(null);
 
   const currentRegionConfig = getRegionConfig(region);
 
-  // Defer heavy 3D WebGL initialization so initial paint and hydration complete instantly
+  // Check WebGL availability and defer initialization so initial paint and hydration complete instantly
   useEffect(() => {
+    const supported = isWebGLSupported();
+    setWebGLAvailable(supported);
+    if (!supported) {
+      setActiveMobileView('sankey');
+    }
     const timer = setTimeout(() => setLoad3D(true), 50);
     return () => clearTimeout(timer);
   }, []);
@@ -159,16 +167,38 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* 3D Globe Background */}
+      {/* 3D Globe Background with Resilience Guard & 2D Fallback */}
       {load3D && (
-        <div className={`${activeMobileView === 'sankey' ? styles.hideOnMobile : ''}`}>
-          <GlobeViz 
-            region={region} 
-            onCountryClick={handleSelectCountry} 
-            countryMetrics={allCountryMetrics} 
-            selectedCountry={selectedCountry}
-          />
-        </div>
+        <GlobeErrorBoundary
+          fallback={
+            <GlobeFallback
+              region={region}
+              onCountryClick={handleSelectCountry}
+              countryMetrics={allCountryMetrics}
+              selectedCountry={selectedCountry}
+              onSwitchToSankey={() => setActiveMobileView('sankey')}
+            />
+          }
+        >
+          {webGLAvailable === false ? (
+            <GlobeFallback
+              region={region}
+              onCountryClick={handleSelectCountry}
+              countryMetrics={allCountryMetrics}
+              selectedCountry={selectedCountry}
+              onSwitchToSankey={() => setActiveMobileView('sankey')}
+            />
+          ) : (
+            <div className={`${activeMobileView === 'sankey' ? styles.hideOnMobile : ''}`}>
+              <GlobeViz 
+                region={region} 
+                onCountryClick={handleSelectCountry} 
+                countryMetrics={allCountryMetrics} 
+                selectedCountry={selectedCountry}
+              />
+            </div>
+          )}
+        </GlobeErrorBoundary>
       )}
 
       {/* Header Chart & HUD */}
@@ -359,7 +389,7 @@ export default function Dashboard() {
               className={`${styles.toggleBtn} ${activeMobileView === 'globe' ? styles.active : ''}`}
               onClick={() => setActiveMobileView('globe')}
             >
-              Globe
+              {webGLAvailable === false ? '2D Map' : 'Globe'}
             </button>
             <button 
               className={`${styles.toggleBtn} ${activeMobileView === 'sankey' ? styles.active : ''}`}

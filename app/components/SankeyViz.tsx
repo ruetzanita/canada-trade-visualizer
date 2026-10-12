@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Sankey, Tooltip, ResponsiveContainer } from 'recharts';
 import styles from './SankeyViz.module.css';
 
@@ -46,6 +46,22 @@ export default function SankeyViz({
 }: SankeyVizProps) {
   const [density, setDensity] = useState<'8' | '15' | 'all'>('8');
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [containerReady, setContainerReady] = useState(false);
+
+  useEffect(() => {
+    if (!wrapperRef.current) return;
+    const el = wrapperRef.current;
+    const checkDims = () => {
+      if (el) {
+        setContainerReady(el.clientWidth > 40 && el.clientHeight > 40);
+      }
+    };
+    checkDims();
+    const observer = new ResizeObserver(checkDims);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Compute aggregated total and structured nodes/links
   const { sankeyData, regionalTotal, nodePadding } = useMemo(() => {
@@ -343,8 +359,9 @@ export default function SankeyViz({
       </div>
 
       {/* SVG Sankey Diagram Area */}
-      <div className={styles.chartWrapper}>
-        {hasData ? (
+      {/* SVG Sankey Diagram Area */}
+      <div ref={wrapperRef} className={styles.chartWrapper}>
+        {hasData && containerReady ? (
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={100}>
             <Sankey
               data={sankeyData}
@@ -374,6 +391,8 @@ export default function SankeyViz({
               <Tooltip content={<CustomTooltip />} />
             </Sankey>
           </ResponsiveContainer>
+        ) : hasData ? (
+          <div style={{ width: '100%', height: '100%', minHeight: '120px' }} />
         ) : (
           <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#64748B', fontSize: '12px' }}>
             No export data for current parameters

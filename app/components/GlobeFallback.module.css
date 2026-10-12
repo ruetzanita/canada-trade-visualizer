@@ -1,0 +1,273 @@
+.fallbackContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 45%, #13192B 0%, #0B0D17 75%, #05060A 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Subtle orbital grid rings */
+.orbitalGrid {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 800px;
+  pointer-events: none;
+  opacity: 0.25;
+}
+
+.orbitalRing {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px dashed rgba(56, 189, 248, 0.4);
+}
+
+.ring1 {
+  width: 320px;
+  height: 320px;
+  animation: slowSpin 120s linear infinite;
+}
+
+.ring2 {
+  width: 580px;
+  height: 580px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  animation: slowSpinReverse 160s linear infinite;
+}
+
+.ring3 {
+  width: 780px;
+  height: 780px;
+  border: 1px dashed rgba(240, 58, 71, 0.25);
+}
+
+@keyframes slowSpin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes slowSpinReverse {
+  from { transform: translate(-50%, -50%) rotate(360deg); }
+  to { transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+/* Telemetry Map Area */
+.telemetryArea {
+  position: relative;
+  width: 90%;
+  max-width: 960px;
+  height: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.svgMapOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Center Canada Hub */
+.canadaHub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.canadaBeacon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #F03A47 30%, rgba(240, 58, 71, 0.3) 70%, transparent 100%);
+  border: 2px solid #F03A47;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px rgba(240, 58, 71, 0.6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.canadaBeacon:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 32px rgba(240, 58, 71, 0.9);
+}
+
+.canadaBeaconLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-top: 6px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* Partner Nodes */
+.partnerNode {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.2s ease;
+}
+
+.partnerNode:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.partnerDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(11, 13, 23, 0.9);
+  border: 2px solid #00B4D8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #38BDF8;
+  box-shadow: 0 0 12px rgba(0, 180, 216, 0.3);
+  transition: all 0.2s ease;
+}
+
+.partnerNode:hover .partnerDot,
+.partnerNodeSelected .partnerDot {
+  border-color: #38BDF8;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.8);
+  background: rgba(56, 189, 248, 0.2);
+}
+
+.partnerLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: #E2E8F0;
+  margin-top: 4px;
+  white-space: nowrap;
+  background: rgba(11, 13, 23, 0.75);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.partnerValue {
+  font-size: 9px;
+  font-weight: 700;
+  color: #34D399;
+}
+
+/* Top Telemetry Notification Banner */
+.telemetryBanner {
+  position: absolute;
+  top: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 30px;
+  padding: 6px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 30;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #38BDF8;
+  letter-spacing: 0.5px;
+}
+
+.statusPulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38BDF8;
+  box-shadow: 0 0 8px #38BDF8;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.bannerDivider {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.bannerText {
+  font-size: 11px;
+  color: #94A3B8;
+}
+
+.bannerActionBtn {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38BDF8;
+  border-radius: 16px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.bannerActionBtn:hover {
+  background: rgba(56, 189, 248, 0.3);
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+@media (max-width: 768px) {
+  .telemetryBanner {
+    top: 75px;
+    padding: 6px 12px;
+    gap: 8px;
+    width: 90%;
+    justify-content: space-between;
+  }
+  .bannerText {
+    display: none;
+  }
+  .ring2, .ring3 {
+    display: none;
+  }
+}
