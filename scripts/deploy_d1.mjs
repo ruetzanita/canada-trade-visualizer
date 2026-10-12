@@ -68,8 +68,8 @@ function checkWrangler() {
 
 function verifyRemoteD1() {
   console.log(`\n🔍 Verifying latest state in Cloudflare D1 (${DB_BINDING_NAME})...`);
-  const digestQueryCmd = `npx --yes wrangler d1 execute ${DB_BINDING_NAME} --remote --command="SELECT id, edition_date, headline FROM weekly_digests ORDER BY id DESC LIMIT 3;" --json`;
-  const macroQueryCmd = `npx --yes wrangler d1 execute ${DB_BINDING_NAME} --remote --command="SELECT MIN(report_month) as min_m, MAX(report_month) as max_m, COUNT(*) as cnt FROM macro_monthly_summary;" --json`;
+  const digestQueryCmd = `npx --yes wrangler d1 execute ${DB_BINDING_NAME} --config=wrangler.toml --remote --command="SELECT id, edition_date, headline FROM weekly_digests ORDER BY id DESC LIMIT 3;" --json`;
+  const macroQueryCmd = `npx --yes wrangler d1 execute ${DB_BINDING_NAME} --config=wrangler.toml --remote --command="SELECT MIN(report_month) as min_m, MAX(report_month) as max_m, COUNT(*) as cnt FROM macro_monthly_summary;" --json`;
   
   try {
     const digestOutput = execSync(digestQueryCmd, {
@@ -147,14 +147,14 @@ async function main() {
 
   if (options.dryRun) {
     console.log('\n[Dry-Run Mode] Validation passed. Would execute:');
-    console.log(`   npx wrangler d1 execute ${DB_BINDING_NAME} --remote --file="${relativeTarget}" --yes`);
+    console.log(`   npx wrangler d1 execute ${DB_BINDING_NAME} --config=wrangler.toml --remote --file="${relativeTarget}" --yes`);
     return;
   }
 
   checkWrangler();
 
   console.log(`\n📡 Executing SQL deployment against remote D1...`);
-  const deployCmd = `npx --yes wrangler d1 execute ${DB_BINDING_NAME} --remote --file="${targetSqlPath}" --yes`;
+  const deployCmd = `npx --yes wrangler d1 execute ${DB_BINDING_NAME} --config=wrangler.toml --remote --file="${targetSqlPath}" --yes`;
 
   try {
     const deployOutput = execSync(deployCmd, {
@@ -172,7 +172,9 @@ async function main() {
 
   } catch (err) {
     console.error(`\n❌ Deployment failed with error:`);
-    console.error(err.stderr || err.stdout || err.message);
+    if (err.stdout) console.error(`STDOUT:\n${err.stdout}`);
+    if (err.stderr) console.error(`STDERR:\n${err.stderr}`);
+    if (!err.stdout && !err.stderr) console.error(err.message);
     process.exit(1);
   }
 }

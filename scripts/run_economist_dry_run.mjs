@@ -647,7 +647,7 @@ DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40');`);
 
   // Insert the new clean weekly digest
   patchStatements.push(`-- 2. Insert verified weekly digest
-INSERT INTO weekly_digests (
+INSERT OR REPLACE INTO weekly_digests (
   id, edition_date, headline, summary, key_developments,
   countries_affected, primary_sources, full_research_publication,
   economist_notes, created_at
