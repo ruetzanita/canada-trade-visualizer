@@ -23,7 +23,15 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-const DEFAULT_MODEL = 'gemini-3.8-flash';
+const COMPILE_ONLY = process.env.COMPILE_ONLY === 'true';
+const FORCE_FALLBACK = process.env.FORCE_FALLBACK === 'true';
+const PRIMARY_MODEL = FORCE_FALLBACK
+  ? 'gemini-3.7-flash'
+  : (process.env.GEMINI_MODEL || process.env.DEFAULT_MODEL || 'gemini-3.8-flash');
+const FALLBACK_MODELS = ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-2.5-flash'];
+const MODEL_CANDIDATES = [PRIMARY_MODEL, ...FALLBACK_MODELS].filter((v, i, a) => a.indexOf(v) === i);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const EUD_COUNTRIES = [
   'Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czechia', 'Denmark', 'Estonia',
@@ -241,47 +249,123 @@ OUTPUT STRICT JSON ONLY:
 `;
 }
 
-async function callGeminiModel(model, prompt, systemInstruction, enableGrounding = false, jsonMode = false) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-
-  const body = {
-    systemInstruction: { parts: [{ text: systemInstruction }] },
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: { 
-      temperature: 0.2,
-      maxOutputTokens: 32768
-    }
-  };
-
-  if (jsonMode) {
-    body.generationConfig.responseMimeType = 'application/json';
-  }
-
-  if (enableGrounding) {
-    body.tools = [{ googleSearch: {} }];
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-goog-api-key': API_KEY
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${errText}`);
-  }
-
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error(`No text returned by ${model}`);
-  }
-  return text;
+function cleanEditorialProse(rawText) {
+  if (!rawText) return '';
+  return rawText
+    // Replace Part 3 / Concluding header with clean journalistic header if needed
+    .replace(/^#+\s*Part\s*3[:\s-]*(The\s+Canadian\s+Bottom\s+Line|The\s+Bottom\s+Line|Conclusion)?.*$/gim, '## The Bottom Line')
+    // Remove any remaining Part 1, Part 2, etc.
+    .replace(/^#+\s*Part\s*\d+.*$/gim, '')
+    // Remove any Theme 1, Section 1 headers
+    .replace(/^#+\s*(Theme|Section)\s*\d+.*$/gim, '')
+    // Clean excessive blank lines
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
+
+async function callGeminiModel(modelCandidates, prompt, systemInstruction, enableGrounding = false, jsonMode = false) {
+  const models = Array.isArray(modelCandidates) ? modelCandidates : [modelCandidates];
+  const maxRetriesPerModel = 4;
+  let lastError = null;
+
+  for (let mIdx = 0; mIdx < models.length; mIdx++) {
+    const currentModel = models[mIdx];
+    let useGrounding = enableGrounding;
+
+    for (let attempt = 1; attempt <= maxRetriesPerModel; attempt++) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent`;
+
+        const body = {
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { 
+            temperature: 0.2,
+            maxOutputTokens: 32768
+          }
+        };
+
+        if (jsonMode) {
+          body.generationConfig.responseMimeType = 'application/json';
+        }
+
+        if (useGrounding) {
+          body.tools = [{ googleSearch: {} }];
+        }
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-goog-api-key': API_KEY
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          let parsed;
+          try { parsed = JSON.parse(errText); } catch {}
+
+          const isRateLimit = response.status === 429 || parsed?.error?.status === 'RESOURCE_EXHAUSTED';
+          const isTransient = isRateLimit || [500, 502, 503, 504, 408].includes(response.status);
+
+          if (isTransient) {
+            const retryHeader = response.headers.get('retry-after');
+            let delayMs = retryHeader ? parseInt(retryHeader, 10) * 1000 : null;
+            if (!delayMs || isNaN(delayMs) || delayMs <= 0) {
+              // Exponential backoff: 5s, 10s, 20s, 40s + jitter
+              delayMs = Math.min(60000, 5000 * Math.pow(2, attempt - 1)) + Math.floor(Math.random() * 2500);
+            }
+
+            console.warn(`   ⚠️ [Gemini ${response.status}] ${currentModel} rate limit or transient issue (attempt ${attempt}/${maxRetriesPerModel}). Waiting ${(delayMs / 1000).toFixed(1)}s before retry...`);
+
+            // If search grounding might be the quota bottleneck, drop grounding after attempt 2
+            if (useGrounding && attempt >= 2) {
+              console.warn(`   ⚠️ Search grounding quota may be saturated. Retrying with parametric model knowledge...`);
+              useGrounding = false;
+            }
+
+            if (attempt < maxRetriesPerModel) {
+              await sleep(delayMs);
+              continue;
+            }
+          }
+
+          throw new Error(`Gemini API error (${response.status}) on ${currentModel}: ${errText}`);
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) {
+          throw new Error(`No text returned by ${currentModel}`);
+        }
+        return text;
+      } catch (err) {
+        lastError = err;
+        const isQuota = err.message.includes('429') || err.message.includes('RESOURCE_EXHAUSTED');
+
+        if (isQuota && attempt < maxRetriesPerModel) {
+          const delayMs = Math.min(60000, 5000 * Math.pow(2, attempt - 1)) + Math.floor(Math.random() * 2500);
+          console.warn(`   ⚠️ [Rate Limit Backoff] ${err.message}. Retrying in ${(delayMs / 1000).toFixed(1)}s...`);
+          await sleep(delayMs);
+          continue;
+        }
+
+        if (mIdx < models.length - 1) {
+          console.warn(`   ⚠️ Exhausted retries on ${currentModel}. Falling back to candidate model ${models[mIdx + 1]}...`);
+          await sleep(2000);
+          break; // break attempt loop to switch model
+        } else if (attempt >= maxRetriesPerModel && mIdx >= models.length - 1) {
+          throw err;
+        }
+      }
+    }
+  }
+
+  throw lastError || new Error(`All model candidates exhausted.`);
+}
+
 
 async function main() {
   console.log(`\n======================================================`);
@@ -298,13 +382,13 @@ async function main() {
     try { masterDb = new Database(masterDbPath); } catch {}
   }
 
-  // 0. Clean old faulty entries as requested
-  console.log(`🧹 Deleting old/faulty test entries from weekly_digests in local database...`);
-  const delStmt = db.prepare(`DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40', '2026-W41')`);
+  // 0. Clean legacy test entries from weekly_digests in local database
+  console.log(`🧹 Cleaning legacy test entries from weekly_digests in local database...`);
+  const delStmt = db.prepare(`DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40')`);
   const delResult = delStmt.run();
   console.log(`   Cleared ${delResult.changes} legacy records from weekly_digests.`);
   if (masterDb) {
-    try { masterDb.prepare(`DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40', '2026-W41')`).run(); } catch {}
+    try { masterDb.prepare(`DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40')`).run(); } catch {}
   }
 
   const now = new Date();
@@ -334,45 +418,63 @@ async function main() {
 
   console.log(`   Baseline Context: ${quantitativeSummary.slice(0, 120)}...\n`);
 
-  // 2. Stage 1: Parallel Regional Investigations (Flash + Google Search Grounding)
-  console.log(`🔍 [Stage 1] Executing parallel regional sweeps via Gemini 3.8 Flash + Search Grounding...`);
-  console.log(`   • Sweep 1A: Indo-Pacific (IPD - 21 countries, Vancouver/Rupert gateways)`);
-  console.log(`   • Sweep 1B: European Union & EFTA (EUD - 33 countries, Montreal/Halifax, CBAM)`);
+  let ipdBrief = '';
+  let eudBrief = '';
+  let editorialArticle = '';
 
-  const [ipdBrief, eudBrief] = await Promise.all([
-    callGeminiModel(DEFAULT_MODEL, buildIPDResearchPrompt(currentYear, quantitativeSummary), TRADE_REPORTER_SYSTEM_PROMPT, true),
-    callGeminiModel(DEFAULT_MODEL, buildEUDResearchPrompt(currentYear, quantitativeSummary), TRADE_REPORTER_SYSTEM_PROMPT, true)
-  ]);
+  if (COMPILE_ONLY) {
+    console.log(`⚡ [Compile-Only Mode] Skipping live search sweeps; checking docs/LATEST_RESEARCH_PUBLICATION.md for existing briefings...`);
+    const pubFilePath = path.join(rootDir, 'docs', 'LATEST_RESEARCH_PUBLICATION.md');
+    if (fs.existsSync(pubFilePath)) {
+      const pubContent = fs.readFileSync(pubFilePath, 'utf8');
+      const sec1Match = pubContent.match(/# SECTION 1: THE LEAD EDITORIAL BRIEFING\s*([\s\S]*?)(?=# SECTION 2:|$)/i);
+      const sec2Match = pubContent.match(/# SECTION 2: INDO-PACIFIC \(IPD\) REGIONAL INTELLIGENCE\s*([\s\S]*?)(?=# SECTION 3:|$)/i);
+      const sec3Match = pubContent.match(/# SECTION 3: EUROPEAN UNION & EFTA \(EUD\) REGIONAL INTELLIGENCE\s*([\s\S]*?)(?=# SECTION 4:|$)/i);
+      if (sec1Match && sec2Match && sec3Match) {
+        editorialArticle = cleanEditorialProse(sec1Match[1].trim());
+        ipdBrief = sec2Match[1].trim();
+        eudBrief = sec3Match[1].trim();
+        console.log(`   ✅ Successfully loaded existing research dossiers from LATEST_RESEARCH_PUBLICATION.md`);
+      }
+    }
+  }
 
-  console.log(`   ✅ Stage 1 complete! IPD Brief (${ipdBrief.length} chars) | EUD Brief (${eudBrief.length} chars)`);
+  // 2. Stage 1: Sequential Regional Investigations (Flash + Google Search Grounding)
+  if (!ipdBrief || !eudBrief) {
+    console.log(`🔍 [Stage 1] Executing regional sweeps via Gemini + Search Grounding (sequential to prevent quota bursts)...`);
+    console.log(`   • Sweep 1A: Indo-Pacific (IPD - 21 countries, Vancouver/Rupert gateways)`);
+    ipdBrief = await callGeminiModel(MODEL_CANDIDATES, buildIPDResearchPrompt(currentYear, quantitativeSummary), TRADE_REPORTER_SYSTEM_PROMPT, true);
+    console.log(`   ✅ Sweep 1A complete! IPD Brief (${ipdBrief.length} chars)`);
+
+    console.log(`   ⏳ Pausing 4s before Sweep 1B to respect API rate limits...`);
+    await sleep(4000);
+
+    console.log(`   • Sweep 1B: European Union & EFTA (EUD - 33 countries, Montreal/Halifax, CBAM)`);
+    eudBrief = await callGeminiModel(MODEL_CANDIDATES, buildEUDResearchPrompt(currentYear, quantitativeSummary), TRADE_REPORTER_SYSTEM_PROMPT, true);
+    console.log(`   ✅ Sweep 1B complete! EUD Brief (${eudBrief.length} chars)`);
+  }
 
   // 3. Stage 2: The Lead Editorial Monograph (Flash as Lead Writer)
-function cleanEditorialProse(rawText) {
-  if (!rawText) return '';
-  return rawText
-    // Replace Part 3 / Concluding header with clean journalistic header if needed
-    .replace(/^#+\s*Part\s*3[:\s-]*(The\s+Canadian\s+Bottom\s+Line|The\s+Bottom\s+Line|Conclusion)?.*$/gim, '## The Bottom Line')
-    // Remove any remaining Part 1, Part 2, etc.
-    .replace(/^#+\s*Part\s*\d+.*$/gim, '')
-    // Remove any Theme 1, Section 1 headers
-    .replace(/^#+\s*(Theme|Section)\s*\d+.*$/gim, '')
-    // Clean excessive blank lines
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
+  if (!editorialArticle) {
+    console.log(`   ⏳ Pausing 3s before Stage 2 editorial commissioning...`);
+    await sleep(3000);
 
-  console.log(`\n✍️ [Stage 2] Commissioning Lead Editorial Cover Story...`);
-  const editorialPrompt = buildLeadEditorialPrompt(ipdBrief, eudBrief, currentYear, editionDate);
-  const rawArticle = await callGeminiModel(DEFAULT_MODEL, editorialPrompt, TRADE_REPORTER_SYSTEM_PROMPT, false);
-  const editorialArticle = cleanEditorialProse(rawArticle);
+    console.log(`\n✍️ [Stage 2] Commissioning Lead Editorial Cover Story...`);
+    const editorialPrompt = buildLeadEditorialPrompt(ipdBrief, eudBrief, currentYear, editionDate);
+    const rawArticle = await callGeminiModel(MODEL_CANDIDATES, editorialPrompt, TRADE_REPORTER_SYSTEM_PROMPT, false);
+    editorialArticle = cleanEditorialProse(rawArticle);
+  }
 
   const wordCount = editorialArticle.trim().split(/\s+/).filter(Boolean).length;
   console.log(`   ✅ Stage 2 complete! Article Word Count: ${wordCount} words (Target: 1,200 - 1,500)`);
 
   // 4. Stage 3: Structured Desk Compiler (Flash JSON Mode)
+  console.log(`   ⏳ Pausing 3s before Stage 3 structured compilation...`);
+  await sleep(3000);
+
   console.log(`\n⚡ [Stage 3] Compiling briefing into edge database JSON...`);
   const compilerPrompt = buildD1CompilerPrompt(editorialArticle, ipdBrief, eudBrief, currentYear, editionId, editionDate);
-  const rawCompilerJson = await callGeminiModel(DEFAULT_MODEL, compilerPrompt, TRADE_REPORTER_SYSTEM_PROMPT, false, true);
+  const rawCompilerJson = await callGeminiModel(MODEL_CANDIDATES, compilerPrompt, TRADE_REPORTER_SYSTEM_PROMPT, false, true);
 
   let structuredData;
   try {
@@ -539,9 +641,9 @@ ${digest.economist_notes || 'All regional corridors operating within verified op
 
   const patchStatements = [];
 
-  // PS: Deleting old entries from D1
+  // PS: Deleting old test entries from D1
   patchStatements.push(`-- 1. Clean up legacy/faulty entries from remote Cloudflare D1
-DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40', '2026-W41');`);
+DELETE FROM weekly_digests WHERE id IN ('2026-W38', '2026-W39', '2026-W40');`);
 
   // Insert the new clean weekly digest
   patchStatements.push(`-- 2. Insert verified weekly digest
