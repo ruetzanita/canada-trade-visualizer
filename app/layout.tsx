@@ -24,7 +24,7 @@ export const metadata = {
   authors: [{ name: 'Canada Trade Visualizer' }],
   icons: {
     icon: '/favicon.svg',
-    shortcut: '/favicon.ico',
+    shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
   openGraph: {
