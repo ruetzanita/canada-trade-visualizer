@@ -10,6 +10,8 @@ import {
   resolveCountryDisplayName,
 } from '../../db/geo_metadata';
 
+import { isWebGLSupported } from './GlobeErrorBoundary';
+
 export default function GlobeViz({ 
   region, 
   onCountryClick,
@@ -23,18 +25,43 @@ export default function GlobeViz({
 }) {
   const globeEl = useRef<any>(null);
   const [countries, setCountries] = useState({ features: [] });
+  const [webGLOk, setWebGLOk] = useState(true);
 
   useEffect(() => {
-    fetch('/assets/globe/ne_110m_admin_0_countries.geojson')
-      .then(res => {
-        if (!res.ok) throw new Error('Local asset missing');
-        return res.json();
-      })
-      .catch(() => {
-        return fetch('https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson').then(r => r.json());
-      })
-      .then(setCountries)
-      .catch(err => console.error('Failed to load GeoJSON data:', err));
+    if (!isWebGLSupported()) {
+      setWebGLOk(false);
+      return;
+    }
+
+    let isCancelled = false;
+    async function fetchCountries() {
+      const candidates = [
+        '/assets/globe/ne_110m_admin_0_countries.json',
+        '/assets/globe/ne_110m_admin_0_countries.geojson',
+        'https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson',
+      ];
+
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (!isCancelled && data && Array.isArray(data.features)) {
+              setCountries(data);
+              return;
+            }
+          }
+        } catch {
+          // Attempt next candidate
+        }
+      }
+    }
+
+    fetchCountries();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   // Update camera when region changes
@@ -116,6 +143,10 @@ export default function GlobeViz({
         color: '#F03A47',
       }));
   }, [region, countryMetrics]);
+
+  if (!webGLOk) {
+    return null;
+  }
 
   return (
     <Globe

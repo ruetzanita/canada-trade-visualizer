@@ -38,6 +38,10 @@ async function main() {
     'https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson',
     path.join(globeDir, 'ne_110m_admin_0_countries.geojson')
   );
+  fs.copyFileSync(
+    path.join(globeDir, 'ne_110m_admin_0_countries.geojson'),
+    path.join(globeDir, 'ne_110m_admin_0_countries.json')
+  );
   await downloadFile(
     'https://unpkg.com/three-globe/example/img/earth-dark.jpg',
     path.join(globeDir, 'earth-dark.jpg')
@@ -50,7 +54,7 @@ async function main() {
     'https://unpkg.com/three-globe/example/img/night-sky.png',
     path.join(globeDir, 'night-sky.png')
   );
-  console.log('All globe assets successfully downloaded!');
+  console.log('All globe assets successfully downloaded (both .json and .geojson generated)!');
 }
 
 main().catch(err => {
